@@ -1,5 +1,6 @@
 import { z } from 'zod';
 export * from './account';
+export * from './matching';
 export const pointSchema = z.object({lat:z.number().min(-90).max(90),lon:z.number().min(-180).max(180)});
 export const orderSchema = z.object({
  id:z.string().min(1),status:z.enum(['open','closed','expired']),

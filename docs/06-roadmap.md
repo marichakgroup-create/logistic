@@ -15,7 +15,7 @@ Format: `[ ] ID — task` followed by acceptance criteria (AC).
 - [x] M1.3 `GET /orders` + Find screen + cards. AC: hides orders exceeding vehicle capacity; shows "updated X min ago".
 
 ## M2 — Matching + Builder (weeks 3–4)
-- [ ] M2.1 `packages/core/matching`: steps 1–7 of `02-matching-engine.md` with all tests in §7. AC: tests green; pure (no I/O).
+- [x] M2.1 `packages/core/matching`: steps 1–7 of `02-matching-engine.md` with all tests in §7. AC: tests green; pure (no I/O).
 - [ ] M2.2 `GET /orders/:id/addons` via match-worker, 5 min cache, `partial` flag. AC: p95 < 4 s on 10k open orders.
 - [ ] M2.3 Trip Builder UI (map, sticky summary, Along-the-way, add/remove, show-all toggle). AC: adding recomputes list; cap 4; load bars correct.
 - [ ] M2.4 `POST /trips` with server re-validation. AC: stale/over-capacity trip rejected with stable error code.

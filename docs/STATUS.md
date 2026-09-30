@@ -17,7 +17,8 @@ Additional verified work:
 - The browser flow `login -> onboarding -> find` completed against the real API and database. Reusing the link redirected to the invalid-link state.
 - A Sprinter search returned the fitting 200 kg Berlin–Warsaw order and hid the 1,704 kg Berlin–Paris order.
 - Mobile layout, tab bar, empty state and account page were visually checked with no console errors or horizontal overflow. The browser test backend imposed a 520 CSS-pixel minimum despite a 390-pixel request; CSS mobile rules apply below 760 px.
-- 19 unit tests pass. Strict TypeScript, ESLint and the Next.js production build pass. npm audit reports no known vulnerabilities.
+- M2.1 pure matching is implemented with batched insertion-route planning, per-leg load profiles, conservative capacity, time-window simulation, driver breaks/hours, detour limits, scoring and fit status.
+- 33 unit tests pass, including every required matching case in `02-matching-engine.md` §7. Strict TypeScript, ESLint and the Next.js production build pass. npm audit reports no known vulnerabilities.
 
 Pending acceptance:
 - M0.1 remains open because Docker is not installed; Compose startup and container healthchecks have not been executed.
@@ -25,4 +26,4 @@ Pending acceptance:
 - The intermediary order-feed contract and credentials will be supplied after the first deployment. Fixtures remain the active source.
 - Production email needs a verified sender and Resend key. Development mail uses the local outbox.
 
-M0.2–M0.5 and M1 are complete. M0.1 is environment-blocked. M2–M4 have not started.
+M0.2–M0.5, M1 and M2.1 are complete. M0.1 is environment-blocked. M2.2–M4 have not started.
