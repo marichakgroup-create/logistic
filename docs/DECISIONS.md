@@ -25,3 +25,10 @@
 - Search dates are UTC calendar days for now; timestamp values remain UTC. City autocomplete uses imported addresses, not a third-party geocoder.
 - Vehicle presets are editable starting values, not certified specifications of every trim. Operators confirm dimensions and payload.
 - Local email writes development-only outbox files; production requires Resend credentials and verified sender. Links are never returned in API responses.
+
+# Design direction — 2026-09-30
+
+- Preserve the simple one-hand mobile flow and current blue LoadLink identity.
+- Apply the supplied premium shipping references through custom logistics SVGs, route threads, physical-label card proportions and compact labels. Do not copy their sidebar structure or green brand.
+- Product-specific illustrations replace generic icon-in-square treatment where they communicate cargo or route state. Lucide remains for universal controls such as calendar, account and back.
+- Full guidance lives in `docs/DESIGN.md` and applies to new screens from M2 onward.

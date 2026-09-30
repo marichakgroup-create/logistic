@@ -1,4 +1,4 @@
-import { Route } from 'lucide-react';
+import { LoadLinkMark } from './freight-visuals';
 export function Brand() {
-  return <span className="brand"><span className="brand-icon"><Route size={22} strokeWidth={2.5}/></span>Load<span className="brand-light">Link</span></span>;
+  return <span className="brand"><span className="brand-icon"><LoadLinkMark/></span>Load<span className="brand-light">Link</span></span>;
 }

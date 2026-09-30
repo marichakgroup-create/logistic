@@ -1,11 +1,12 @@
 'use client';
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, Truck } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { vehicleInputSchema, vehiclePresets, type Vehicle, type VehicleInput } from '@loadlink/core';
 import { api } from '../lib/api';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { VanCargo } from './freight-visuals';
 
 export function VehicleForm({ initial, onboarding=false }: { initial?:Vehicle; onboarding?:boolean }) {
   const router = useRouter();
@@ -26,7 +27,7 @@ export function VehicleForm({ initial, onboarding=false }: { initial?:Vehicle; o
     finally {setBusy(false);}
   }
   return <form onSubmit={submit} className="vehicle-form">
-    <div className="van-visual" aria-hidden="true"><Truck size={92} strokeWidth={1}/><span>READY FOR THE ROAD</span></div>
+    <div className="van-visual" aria-hidden="true"><VanCargo/><span>READY FOR THE ROAD</span></div>
     <fieldset className="preset-fieldset"><legend>Choose a starting point</legend><div className="presets">{vehiclePresets.map(preset=><button type="button" key={preset.name} aria-pressed={value.name===preset.name} className={value.name===preset.name?'preset selected':'preset'} onClick={()=>{setValue({...preset});setSaved(false);}}>{preset.name}</button>)}</div></fieldset>
     <p className="muted small">Confirm these starting values against your van’s documents.</p>
     <label htmlFor="van-name">Van name<Input id="van-name" value={value.name} onChange={e=>set('name',e.target.value)} maxLength={60} required/></label>

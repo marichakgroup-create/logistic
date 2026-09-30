@@ -1,12 +1,13 @@
 'use client';
 import { useEffect, useState, type FormEvent } from 'react';
-import { ArrowRight, CalendarDays, ChevronDown, MapPin, PackageOpen, Route } from 'lucide-react';
+import { ArrowRight, CalendarDays, ChevronDown, MapPin, PackageOpen } from 'lucide-react';
 import type { Location, OrderCard, SearchResult, Vehicle } from '@loadlink/core';
 import { api } from '../lib/api';
 import { euro, euroRate, flag, number, tomorrow, updatedText } from '../lib/format';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Input } from './ui/input';
+import { FreightParcel, RouteThread } from './freight-visuals';
 
 type Sort='rate'|'price'|'pickup';
 export function FindClient({vehicle}:{vehicle:Vehicle}) {
@@ -43,5 +44,5 @@ export function FindClient({vehicle}:{vehicle:Vehicle}) {
 }
 function Order({order}:{order:OrderCard}) {
   const rate=order.priceEur!==null&&order.distanceKm?order.priceEur/order.distanceKm:null;
-  return <Card className="order-card"><div className="order-route"><span className="route-mark"><Route size={20}/></span><div><h3>{flag(order.pickupCountry)} {order.pickupAddress} <span>→</span> {flag(order.deliveryCountry)} {order.deliveryAddress}</h3><p>{new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short'}).format(new Date(order.pickupFrom))}</p></div><span className="fit-badge">Fits your van</span></div><div className="order-numbers"><strong>{order.priceEur===null?'Price unknown':euro(order.priceEur)}</strong><span>{order.distanceKm===null?'Distance unknown':`${number(order.distanceKm)} km`}</span><span>{rate===null?'Rate unknown':`${euroRate(rate)}/km`}</span></div><div className="order-cargo"><span>{number(order.weightKg)} kg</span><span>{order.volumeM3===null?'Volume unknown':`${number(order.volumeM3)} m³`}</span>{order.dimensionsUnknown&&<span>Dimensions unknown</span>}</div></Card>;
+  return <Card className="order-card"><div className="order-route"><span className="route-mark"><FreightParcel/></span><div><h3>{flag(order.pickupCountry)} {order.pickupAddress} <span>→</span> {flag(order.deliveryCountry)} {order.deliveryAddress}</h3><p>{new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short'}).format(new Date(order.pickupFrom))}</p><RouteThread/></div><span className="fit-badge"><i/>Fits your van</span></div><div className="order-numbers"><strong>{order.priceEur===null?'Price unknown':euro(order.priceEur)}</strong><span><small>Distance</small>{order.distanceKm===null?'Unknown':`${number(order.distanceKm)} km`}</span><span><small>Route value</small>{rate===null?'Unknown':`${euroRate(rate)}/km`}</span></div><div className="order-cargo"><span>{number(order.weightKg)} kg</span><span>{order.volumeM3===null?'Volume unknown':`${number(order.volumeM3)} m³`}</span>{order.dimensionsUnknown&&<span>Dimensions unknown</span>}</div></Card>;
 }
