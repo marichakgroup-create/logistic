@@ -142,3 +142,39 @@ input[type="checkbox"],input[type="radio"]{accent-color:var(--signal)}
  .inline-hint>span{position:fixed;left:20px;right:20px;bottom:94px;width:auto;padding:14px 16px;border-radius:16px}
  .inline-hint>span:after{display:none}
 }
+
+/* Login is the first product demonstration, not a generic authentication card. */
+.login-header-note{font-size:.66rem;line-height:1;letter-spacing:.08em;font-weight:800;color:var(--ink-2)}
+.auth-layout{grid-template-columns:minmax(360px,470px) minmax(420px,1fr);gap:clamp(44px,7vw,96px)}
+.login-form{padding:42px;border-radius:28px}
+.login-form .eyebrow{margin-bottom:18px;color:#536275}
+.login-form h1{max-width:390px;margin-bottom:20px}
+.login-form .lead{max-width:390px;font-size:1rem;line-height:1.55;margin-bottom:32px}
+.login-form .button{margin-top:4px}
+.secure-note{margin:13px 0 28px}
+.trial-note{justify-content:space-between;gap:14px;color:#59687a}
+.trial-note>span{display:inline-flex;align-items:center;gap:7px}
+.status-dot{display:inline-block;flex:0 0 auto;background:var(--profit)}
+.route-art{display:block;min-height:560px;padding:0;border-radius:32px;isolation:isolate}
+.route-art:after{content:"";position:absolute;inset:18px;border:1px solid rgba(255,255,255,.08);border-radius:22px;pointer-events:none}
+.route-visual-head,.route-benefit{position:absolute;z-index:2;left:46px}
+.route-visual-head{top:44px}.route-benefit{bottom:46px}
+.route-visual-head p,.route-benefit p{margin:0 0 8px;color:#a6b4c5;font-size:.68rem;line-height:1;letter-spacing:.08em;font-weight:800}
+.route-visual-head strong{font-size:1.25rem;color:#fff}
+.route-visual-head strong span{color:var(--signal);padding:0 6px}
+.route-benefit strong{display:block;color:var(--signal);font-size:clamp(3.4rem,6vw,4.8rem);line-height:.96;font-variant-numeric:tabular-nums}
+.route-benefit span{display:block;margin-top:10px;color:#a6b4c5;font-size:.86rem}
+.route-art .route-line{top:25%;height:42%}
+.check-inbox{max-width:470px;padding:42px;border:1px solid var(--line);border-radius:28px;background:var(--paper);color:var(--ink)}
+.check-inbox .round-icon{display:inline-flex;margin-bottom:18px;color:var(--ink)}
+.check-inbox h1{font-size:clamp(2.25rem,4vw,3.1rem);margin-bottom:18px}
+.dev-mail-note{margin:22px 0 10px;padding:13px 14px;border-left:3px solid var(--signal);background:#f5f6f3;color:#536275;font-size:.77rem;text-align:left}
+.dev-mail-note code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink);font-weight:700}
+@media(max-width:760px){
+ .login-header-note{display:none}
+ .auth-layout{display:block;padding-top:30px}
+ .login-form,.check-inbox{padding:28px 22px;border-radius:24px}
+ .login-form h1{font-size:2.65rem}
+ .login-form .lead{font-size:.95rem}
+ .trial-note{align-items:flex-start;flex-direction:column}
+}

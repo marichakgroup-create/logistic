@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "migrate": "tsx infra/migrate.ts"
+    "migrate": "tsx infra/migrate.ts",
+    "mail:latest": "tsx infra/latest-mail.ts"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
