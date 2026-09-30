@@ -18,11 +18,11 @@ Format: `[ ] ID — task` followed by acceptance criteria (AC).
 - [x] M2.1 `packages/core/matching`: steps 1–7 of `02-matching-engine.md` with all tests in §7. AC: tests green; pure (no I/O).
 - [ ] M2.2 `GET /orders/:id/addons` via match-worker, 5 min cache, `partial` flag. AC: p95 < 4 s on 10k open orders.
 - [ ] M2.3 Trip Builder UI (map, sticky summary, Along-the-way, add/remove, show-all toggle). AC: adding recomputes list; cap 4; load bars correct.
-- [ ] M2.4 `POST /trips` with server re-validation. AC: stale/over-capacity trip rejected with stable error code.
+- [x] M2.4 `POST /trips` with server re-validation. AC: stale/over-capacity trip rejected with stable error code.
 
 ## M3 — Trips management (week 5)
-- [ ] M3.1 Trip Detail + Open on trans.eu + Mark booked + derived trip status. AC: status rules in `04` §Derived hold.
-- [ ] M3.2 Trips list with tabs + swipe cancel.
+- [x] M3.1 Trip Detail + Open on trans.eu + Mark booked + derived trip status. AC: status rules in `04` §Derived hold.
+- [x] M3.2 Trips list with tabs + swipe cancel.
 - [ ] M3.3 `notify` worker: email when an order in a saved trip becomes `lost`. AC: one email per order, banner appears in app.
 - [ ] M3.4 Stripe trial/checkout/portal/webhook + paywall behavior. AC: trial expiry blocks Save/Add only.
 - [ ] M3.5 Event logging for all types in `04`.

@@ -22,7 +22,7 @@ export function VehicleForm({ initial, onboarding=false }: { initial?:Vehicle; o
     if (!parsed.success) { setError(parsed.error.issues[0].message); return; }
     setBusy(true);
     try { await api('/vehicles',{ method:'PUT',body:JSON.stringify(parsed.data) });
-      if (onboarding) router.replace('/find'); else {setSaved(true);router.refresh();}
+      if (onboarding) router.replace('/find?welcome=1'); else {setSaved(true);router.refresh();}
     } catch(error) { setError(error instanceof Error?error.message:'Could not save your van.'); }
     finally {setBusy(false);}
   }

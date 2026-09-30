@@ -4,7 +4,7 @@ import {VehicleService} from './vehicles';
 import {ServiceError} from './errors';
 
 type MatchRow={
- id:string;status:'open'|'closed'|'expired';pickup_lat:number;pickup_lon:number;delivery_lat:number;delivery_lon:number;
+ id:string;status:'open'|'closed'|'expired';pickup_addr:string;delivery_addr:string;pickup_lat:number;pickup_lon:number;delivery_lat:number;delivery_lon:number;
  pickup_from:Date;pickup_to:Date;delivery_from:Date;delivery_to:Date;weight_kg:number|null;volume_m3:string|null;
  length_cm:number|null;width_cm:number|null;height_cm:number|null;price_eur:string|null;along_pickup:number;along_delivery:number;
 };
@@ -12,7 +12,7 @@ type MainRow=MatchRow&{candidate_count?:number};
 const candidateLimit=40;
 
 function order(row:MatchRow):MatchOrder{return{
- id:row.id,status:row.status,pickup:{lat:Number(row.pickup_lat),lon:Number(row.pickup_lon)},delivery:{lat:Number(row.delivery_lat),lon:Number(row.delivery_lon)},
+ id:row.id,status:row.status,pickup:{lat:Number(row.pickup_lat),lon:Number(row.pickup_lon)},delivery:{lat:Number(row.delivery_lat),lon:Number(row.delivery_lon)},pickupAddress:row.pickup_addr,deliveryAddress:row.delivery_addr,
  pickupFrom:row.pickup_from.toISOString(),pickupTo:row.pickup_to.toISOString(),deliveryFrom:row.delivery_from.toISOString(),deliveryTo:row.delivery_to.toISOString(),
  weightKg:row.weight_kg,volumeM3:row.volume_m3===null?null:Number(row.volume_m3),lengthCm:row.length_cm,widthCm:row.width_cm,heightCm:row.height_cm,
  priceEur:row.price_eur===null?null:Number(row.price_eur),alongPickup:Number(row.along_pickup),alongDelivery:Number(row.along_delivery)
@@ -43,7 +43,7 @@ export class AddonMatchingService{
  constructor(private pool:Pool,private planner:RoutePlanner){this.vehicles=new VehicleService(pool);}
  async match(userId:string,mainOrderId:string,rawQuery:unknown):Promise<AddonResult>{
   const query=addonQuerySchema.parse(rawQuery);const vehicle=await this.vehicles.getOwned(userId,query.vehicleId);
-  const mainResult=await this.pool.query<MainRow>(`SELECT id,status,ST_Y(pickup_geo::geometry) pickup_lat,ST_X(pickup_geo::geometry) pickup_lon,
+  const mainResult=await this.pool.query<MainRow>(`SELECT id,status,pickup_addr,delivery_addr,ST_Y(pickup_geo::geometry) pickup_lat,ST_X(pickup_geo::geometry) pickup_lon,
    ST_Y(delivery_geo::geometry) delivery_lat,ST_X(delivery_geo::geometry) delivery_lon,pickup_from,pickup_to,delivery_from,delivery_to,
    weight_kg,volume_m3,length_cm,width_cm,height_cm,price_eur,0::float along_pickup,1::float along_delivery
    FROM orders WHERE id=$1 AND status='open' AND pickup_to>now()`,[mainOrderId]);
@@ -56,7 +56,7 @@ export class AddonMatchingService{
      ST_LineLocatePoint(m.line,ST_ClosestPoint(m.line,o.delivery_geo::geometry)) along_delivery
     FROM orders o CROSS JOIN main m WHERE o.id<>$1 AND o.status='open' AND o.pickup_to>now()
      AND ST_DWithin(o.pickup_geo,m.line::geography,$2*1000) AND ST_DWithin(o.delivery_geo,m.line::geography,$2*1000)
-   ) SELECT id,status,ST_Y(pickup_geo::geometry) pickup_lat,ST_X(pickup_geo::geometry) pickup_lon,
+   ) SELECT id,status,pickup_addr,delivery_addr,ST_Y(pickup_geo::geometry) pickup_lat,ST_X(pickup_geo::geometry) pickup_lon,
     ST_Y(delivery_geo::geometry) delivery_lat,ST_X(delivery_geo::geometry) delivery_lon,pickup_from,pickup_to,delivery_from,delivery_to,
     weight_kg,volume_m3,length_cm,width_cm,height_cm,price_eur,along_pickup,along_delivery,count(*) OVER() total_count
    FROM candidates ORDER BY along_pickup,price_eur DESC NULLS LAST LIMIT $3`,[mainOrderId,query.bufferKm,candidateLimit]);

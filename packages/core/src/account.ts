@@ -65,3 +65,15 @@ export type OrderCard = {
 };
 export type SearchResult = { orders: OrderCard[]; nextCursor: string | null; updatedAt: string | null };
 export type Location = { name: string; country: string | null };
+export const tripCreateSchema=z.object({
+ vehicleId:z.string().uuid(),
+ mainOrderId:z.string().uuid(),
+ addonOrderIds:z.array(z.string().uuid()).max(4).default([])
+}).strict().refine(value=>new Set(value.addonOrderIds).size===value.addonOrderIds.length,'Duplicate add-on orders');
+export type TripCreate=z.infer<typeof tripCreateSchema>;
+export type CreatedTrip={id:string;status:'planned';totalKm:number|null;totalRevenue:number;detourKm:number;startAt:string;endAt:string};
+export const tripOrderStatusSchema=z.object({status:z.enum(['booked','dropped'])}).strict();
+export type TripOrderItem={tripOrderId:string;orderId:string;role:'main'|'addon';status:'pending'|'booked'|'dropped'|'lost';pickupAddress:string;deliveryAddress:string;pickupFrom:string;deliveryTo:string;priceEur:number|null;weightKg:number|null;volumeM3:number|null;transEuUrl:string};
+export type TripDetail={id:string;status:'planned'|'booked'|'done'|'cancelled';totalKm:number|null;totalRevenue:number;detourKm:number;startAt:string;endAt:string;vehicleName:string;orders:TripOrderItem[]};
+export const tripListQuerySchema=z.object({status:z.enum(['planned','booked','done','cancelled']).optional()});
+export type TripListItem={id:string;status:TripDetail['status'];pickupAddress:string;deliveryAddress:string;totalKm:number|null;totalRevenue:number;startAt:string;endAt:string;orderCount:number};

@@ -1,13 +1,13 @@
 import 'reflect-metadata';
-import { Body, Controller, Get, Post, Put, Param, Query, Req, Res, Module, HttpException,
+import { Body, Controller, Get, Patch, Post, Put, Param, Query, Req, Res, Module, HttpException,
   type ArgumentsHost, type ExceptionFilter } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import type { Pool } from 'pg';
 import { z, ZodError } from 'zod';
-import { addonQuerySchema, magicLinkRequestSchema, type SessionUser } from '@loadlink/core';
+import { addonQuerySchema, magicLinkRequestSchema, tripCreateSchema, tripListQuerySchema, tripOrderStatusSchema, type SessionUser } from '@loadlink/core';
 import { AuthService, VehicleService, OrderService, ServiceError, enforceRequestLimit,
-  SESSION_SECONDS, type EmailSender } from '@loadlink/services';
+  SESSION_SECONDS, TripService, type EmailSender } from '@loadlink/services';
 import type {AddonDispatcher} from './addon-queue';
 
 export type AppConfig = { appUrl: string; sessionSecret: string; production: boolean };
@@ -35,6 +35,7 @@ export async function createApp(pool: Pool, sender: EmailSender, config: AppConf
   const auth = new AuthService(pool, sender, config.sessionSecret, config.appUrl);
   const vehicles = new VehicleService(pool);
   const orders = new OrderService(pool);
+  const trips = new TripService(pool);
   const cookieOptions = { httpOnly: true, sameSite: 'lax' as const, secure: config.production, path: '/', maxAge: SESSION_SECONDS*1000 };
   async function user(request: Request): Promise<SessionUser> {
     const current = await auth.authenticate(cookieToken(request));
@@ -91,6 +92,25 @@ export async function createApp(pool: Pool, sender: EmailSender, config: AppConf
     }
     @Get('locations') async locations(@Query('q') query: string, @Req() request: Request) {
       await user(request); return { locations: await orders.locations(z.string().max(120).parse(query ?? '')) };
+    }
+    @Post('trips') async createTrip(@Body() body: unknown,@Req() request:Request){
+      if(!addons)throw new ServiceError('MATCH_UNAVAILABLE','Route matching is temporarily unavailable.',503);
+      sameOrigin(request);const current=await user(request);const input=tripCreateSchema.parse(body);
+      const matches=await addons.get({userId:current.id,mainOrderId:input.mainOrderId,query:{vehicleId:input.vehicleId,bufferKm:25}});
+      return{trip:await trips.create(current.id,input,matches.suggestions)};
+    }
+    @Get('trips') async tripList(@Query() query:unknown,@Req() request:Request){
+      const input=tripListQuerySchema.parse(query);return{trips:await trips.list((await user(request)).id,input.status)};
+    }
+    @Get('trips/:id') async tripDetail(@Param('id') id:string,@Req() request:Request){
+      z.string().uuid().parse(id);return{trip:await trips.detail((await user(request)).id,id)};
+    }
+    @Patch('trip-orders/:id') async markTripOrder(@Param('id') id:string,@Body() body:unknown,@Req() request:Request){
+      sameOrigin(request);z.string().uuid().parse(id);const input=tripOrderStatusSchema.parse(body);
+      return{trip:await trips.mark((await user(request)).id,id,input.status)};
+    }
+    @Patch('trips/:id') async cancelTrip(@Param('id') id:string,@Req() request:Request){
+      sameOrigin(request);z.string().uuid().parse(id);return trips.cancel((await user(request)).id,id);
     }
   }
   @Module({ controllers: [ApiController] }) class AppModule {}

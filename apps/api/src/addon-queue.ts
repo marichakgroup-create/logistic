@@ -13,7 +13,7 @@ export class BullAddonDispatcher implements AddonDispatcher{
   this.queue=new Queue('match-orders',{connection});this.events=new QueueEvents('match-orders',{connection});
  }
  async get(data:AddonJob):Promise<AddonResult>{
-  const id=`addons-${data.userId}-${data.mainOrderId}-${data.query.vehicleId}-${data.query.bufferKm}-${data.query.tripId??'new'}`;
+  const id=`addons-v2-${data.userId}-${data.mainOrderId}-${data.query.vehicleId}-${data.query.bufferKm}-${data.query.tripId??'new'}`;
   let job=await this.queue.getJob(id);
   if(job){
    const state=await job.getState();

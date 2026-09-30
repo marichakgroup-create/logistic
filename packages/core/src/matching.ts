@@ -4,7 +4,7 @@ import type { VehicleInput } from './account';
 
 export type StopKind='pickup'|'delivery';
 export type TripStop={orderId:string;kind:StopKind;point:Point;windowFrom:string;windowTo:string;weightKg:number|null;volumeM3:number|null};
-export type MatchOrder={id:string;status:'open'|'closed'|'expired';pickup:Point;delivery:Point;pickupFrom:string;pickupTo:string;deliveryFrom:string;deliveryTo:string;weightKg:number|null;volumeM3:number|null;lengthCm:number|null;widthCm:number|null;heightCm:number|null;priceEur:number|null;alongPickup:number;alongDelivery:number};
+export type MatchOrder={id:string;status:'open'|'closed'|'expired';pickup:Point;delivery:Point;pickupAddress?:string;deliveryAddress?:string;pickupFrom:string;pickupTo:string;deliveryFrom:string;deliveryTo:string;weightKg:number|null;volumeM3:number|null;lengthCm:number|null;widthCm:number|null;heightCm:number|null;priceEur:number|null;alongPickup:number;alongDelivery:number};
 export type MatchTrip={departAt:string;stops:TripStop[];baseKm:number;baseMinutes:number;addonIds:string[]};
 export type MatchOpts={bufferKm:number;maxDetourPct:number;maxDetourKm:number;costPerKm:number;stopMinutes:number;timeBuffer:number;maxAddons:number;capacityFactor:number};
 export const defaultMatchOpts:MatchOpts={bufferKm:25,maxDetourPct:.15,maxDetourKm:40,costPerKm:.45,stopMinutes:30,timeBuffer:.15,maxAddons:4,capacityFactor:.95};

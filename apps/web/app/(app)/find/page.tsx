@@ -4,4 +4,4 @@ import { redirect } from 'next/navigation';
 import { FindClient } from '../../../components/find-client';
 import { serverApi } from '../../../lib/server-api';
 export const metadata: Metadata={title:'Find'};
-export default async function FindPage(){const data=await serverApi<{vehicles:Vehicle[]}>('/vehicles');if(!data.vehicles[0])redirect('/onboarding');return <FindClient vehicle={data.vehicles[0]}/>;}
+export default async function FindPage({searchParams}:{searchParams:Promise<{welcome?:string}>}){const [data,query]=await Promise.all([serverApi<{vehicles:Vehicle[]}>('/vehicles'),searchParams]);if(!data.vehicles[0])redirect('/onboarding');return <FindClient vehicle={data.vehicles[0]} welcome={query.welcome==='1'}/>;}
