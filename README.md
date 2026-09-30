@@ -16,7 +16,7 @@ npm run dev --workspace=@loadlink/web
 
 For the complete local flow, run the API and web app with `DATABASE_URL`, `APP_URL`, and a 32+ character `SESSION_SECRET`. Development magic links are written to `.local/mail` and never returned by the API. Production requires `EMAIL_PROVIDER=resend`, `EMAIL_API_KEY`, and a verified `EMAIL_FROM` sender.
 
-To sign in locally, submit any valid email on `/login`, then run `npm run mail:latest` and open the printed one-time URL in the same browser. The helper only reads the local outbox and is disabled when `NODE_ENV=production`.
+To sign in locally, submit any valid email on `/login` and press **Sign in**. The development-only endpoint creates the local session immediately and is disabled in production. `npm run mail:latest` remains available when testing the magic-link flow itself.
 
 ## Containers
 

@@ -53,6 +53,12 @@ export async function createApp(pool: Pool, sender: EmailSender, config: AppConf
       await auth.requestLink(magicLinkRequestSchema.parse(body).email);
       return { message: 'Check your inbox' };
     }
+    @Post('auth/dev-login') async devLogin(@Body() body: unknown, @Req() request: Request, @Res({passthrough:true}) response: Response) {
+      if(config.production)throw new ServiceError('NOT_FOUND','Not found.',404);
+      sameOrigin(request);const result=await auth.createDevelopmentSession(magicLinkRequestSchema.parse(body).email);
+      response.cookie('loadlink_session',result.sessionToken,cookieOptions);
+      return{user:result.user,hasVehicle:result.hasVehicle};
+    }
     @Get('auth/callback') async callback(@Query('token') token: string, @Res() response: Response) {
       response.setHeader('Referrer-Policy', 'no-referrer');
       try {

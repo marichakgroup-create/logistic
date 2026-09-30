@@ -40,4 +40,14 @@ describe('magic-link authentication',()=>{
     await expect(service.consumeLink('not-a-token')).rejects.toMatchObject({code:'INVALID_LINK'});
     expect(query).not.toHaveBeenCalled();
   });
+  it('creates a normalized development session without sending email',async()=>{
+    const query=vi.fn(async(sql:string)=>{
+      if(sql.startsWith('INSERT INTO users'))return{rows:[{id:'user-1',email:'test@example.com',plan:'trial',plan_status:'active',trial_ends_at:null}],rowCount:1};
+      if(sql.startsWith('SELECT id FROM vehicles'))return{rows:[],rowCount:0};
+      return{rows:[],rowCount:1};
+    });
+    const {service,email}=testAuth(query);const result=await service.createDevelopmentSession(' TEST@Example.com ');
+    expect(result.user.email).toBe('test@example.com');expect(result.sessionToken).toMatch(/^[a-f0-9]{64}$/);expect(result.hasVehicle).toBe(false);
+    expect(email.sendMagicLink).not.toHaveBeenCalled();
+  });
 });

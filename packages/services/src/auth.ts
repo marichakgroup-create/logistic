@@ -54,6 +54,21 @@ export class AuthService {
     finally { db.release(); }
   }
 
+  async createDevelopmentSession(rawEmail: string): Promise<{sessionToken:string;user:SessionUser;hasVehicle:boolean}> {
+    const email=emailSchema.parse(rawEmail);
+    const db=await this.pool.connect();
+    try{
+      await db.query('BEGIN');
+      const userResult=await db.query<UserRow>(
+        "INSERT INTO users(email,trial_ends_at) VALUES($1,now()+interval '14 days') ON CONFLICT(email) DO UPDATE SET email=EXCLUDED.email RETURNING id,email,plan,plan_status,trial_ends_at",[email]);
+      const user=userFromRow(userResult.rows[0]);const sessionToken=randomBytes(32).toString('hex');
+      await db.query("INSERT INTO sessions(token_hash,user_id,expires_at) VALUES($1,$2,now()+interval '30 days')",[this.hash(sessionToken),user.id]);
+      const vehicles=await db.query('SELECT id FROM vehicles WHERE user_id=$1 AND is_default',[user.id]);
+      await db.query('COMMIT');
+      return{sessionToken,user,hasVehicle:vehicles.rowCount!==0};
+    }catch(error){await db.query('ROLLBACK');throw error;}finally{db.release();}
+  }
+
   async authenticate(token: string | undefined): Promise<SessionUser> {
     if (!token || !/^[a-f0-9]{64}$/.test(token)) throw this.unauthorized();
     const result = await this.pool.query<UserRow>(

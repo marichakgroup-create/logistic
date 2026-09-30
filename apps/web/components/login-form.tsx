@@ -10,7 +10,10 @@ export function LoginForm({ invalid=false,localOutbox=false }: { invalid?:boolea
   const [busy,setBusy]=useState(false); const [error,setError]=useState('');
   async function submit(event:FormEvent) {
     event.preventDefault();setBusy(true);setError('');
-    try {await api('/auth/magic-link',{method:'POST',body:JSON.stringify({email})});setSent(true);}
+    try {
+      if(localOutbox){const result=await api<{hasVehicle:boolean}>('/auth/dev-login',{method:'POST',body:JSON.stringify({email})});window.location.assign(result.hasVehicle?'/find':'/onboarding');return;}
+      await api('/auth/magic-link',{method:'POST',body:JSON.stringify({email})});setSent(true);
+    }
     catch(error){setError(error instanceof Error?error.message:'Could not send link.');}
     finally{setBusy(false);}
   }
@@ -21,8 +24,8 @@ export function LoginForm({ invalid=false,localOutbox=false }: { invalid?:boolea
     {invalid&&<p className="error-message" role="alert">This link has expired or already been used. Request a new one.</p>}
     <label htmlFor="email">Email address<Input id="email" name="email" type="email" inputMode="email" autoComplete="email" placeholder="you@company.com" value={email} onChange={e=>setEmail(e.target.value)} required maxLength={254}/></label>
     {error&&<p className="error-message" role="alert">{error}</p>}
-    <Button className="full-width" type="submit" disabled={busy}>{busy?'Sending…':'Continue with email'}<ArrowRight size={18}/></Button>
-    <p className="secure-note"><ShieldCheck size={15}/> No password. We send a one-time secure link.</p>
+    <Button className="full-width" type="submit" disabled={busy}>{busy?'Signing in…':localOutbox?'Sign in':'Continue with email'}<ArrowRight size={18}/></Button>
+    <p className="secure-note"><ShieldCheck size={15}/> {localOutbox?'Local test mode · no password required.':'No password. We send a one-time secure link.'}</p>
     <div className="trial-note"><span><i className="status-dot"/>14-day free trial</span><span>One van · Cancel anytime</span></div>
   </form>;
 }
