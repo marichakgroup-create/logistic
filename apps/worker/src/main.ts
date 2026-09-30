@@ -1,0 +1,14 @@
+import {Worker,Queue} from 'bullmq';
+import {Pool} from 'pg';
+import {FixtureSource,syncOrders} from '@loadlink/services';
+const redis=new URL(process.env.REDIS_URL??'redis://localhost:6379');
+const connection={host:redis.hostname,port:Number(redis.port||6379),password:redis.password||undefined};
+const pool=new Pool({connectionString:process.env.DATABASE_URL});
+const sourceName=process.env.ORDER_SOURCE??'fixture';
+if(sourceName!=='fixture')throw new Error('Feed adapter requires an agreed feed contract');
+const queue=new Queue('sync-orders',{connection});
+await queue.upsertJobScheduler('periodic-sync',{every:60000},{name:'sync',data:{}});
+await queue.add('sync',{});
+const worker=new Worker('sync-orders',async()=>{const source=new FixtureSource(process.env.FIXTURE_EPOCH?new Date(process.env.FIXTURE_EPOCH):undefined);const result=await syncOrders(pool,source,sourceName);process.stdout.write(JSON.stringify({event:'sync_completed',...result})+'\n');},{connection,concurrency:1});
+worker.on('failed',(_job,error)=>process.stderr.write(JSON.stringify({event:'sync_failed',message:error.message})+'\n'));
+for(const signal of ['SIGTERM','SIGINT'])process.on(signal,async()=>{await worker.close();await queue.close();await pool.end();process.exit(0);});

@@ -1,0 +1,12 @@
+{
+  "name": "@loadlink/core",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "zod": "^3.24.0"
+  },
+  "scripts": {
+    "build": "tsc --noEmit"
+  }
+}

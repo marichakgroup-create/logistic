@@ -1,0 +1,14 @@
+{
+  "name": "@loadlink/services",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@loadlink/core": "*",
+    "pg": "^8.13.0",
+    "drizzle-orm": "^0.45.3"
+  },
+  "scripts": {
+    "build": "tsc --noEmit"
+  }
+}

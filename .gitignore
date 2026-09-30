@@ -1,0 +1,10 @@
+node_modules/
+.next/
+dist/
+.env
+infra/osrm/*.osrm*
+infra/osrm/*.pbf
+*.tsbuildinfo
+.local/
+.DS_Store
+files.zip
