@@ -23,7 +23,7 @@ Format: `[ ] ID — task` followed by acceptance criteria (AC).
 ## M3 — Trips management (week 5)
 - [x] M3.1 Trip Detail + Open on trans.eu + Mark booked + derived trip status. AC: status rules in `04` §Derived hold.
 - [x] M3.2 Trips list with tabs + swipe cancel.
-- [ ] M3.3 `notify` worker: email when an order in a saved trip becomes `lost`. AC: one email per order, banner appears in app.
+- [x] M3.3 `notify` worker: email when an order in a saved trip becomes `lost`. AC: one email per order, banner appears in app.
 - [ ] M3.4 Stripe trial/checkout/portal/webhook + paywall behavior. AC: trial expiry blocks Save/Add only.
 - [ ] M3.5 Event logging for all types in `04`.
 

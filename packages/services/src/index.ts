@@ -8,3 +8,4 @@ export * from './vehicles';
 export * from './orders';
 export * from './addons';
 export * from './trips';
+export * from './notifications';

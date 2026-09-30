@@ -15,6 +15,13 @@
       "when": 1790769600001,
       "tag": "0001_account_search",
       "breakpoints": false
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790769600002,
+      "tag": "0002_order_notifications",
+      "breakpoints": false
     }
   ]
 }

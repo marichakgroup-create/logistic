@@ -1,16 +1,22 @@
 import {Worker,Queue} from 'bullmq';
 import {Pool} from 'pg';
-import {AddonMatchingService,CachedRouting,FixtureRouting,GoogleRouting,LegRoutePlanner,OsrmRouting,PostgresRouteCache,FixtureSource,syncOrders} from '@loadlink/services';
+import {resolve} from 'node:path';
+import {AddonMatchingService,CachedRouting,FixtureRouting,GoogleRouting,LegRoutePlanner,LocalEmailSender,NotificationService,OsrmRouting,PostgresRouteCache,ResendEmailSender,FixtureSource,syncOrders} from '@loadlink/services';
 import type {AddonQuery,AddonResult} from '@loadlink/core';
 const redis=new URL(process.env.REDIS_URL??'redis://localhost:6379');
 const connection={host:redis.hostname,port:Number(redis.port||6379),password:redis.password||undefined};
 const pool=new Pool({connectionString:process.env.DATABASE_URL});
+const appUrl=(process.env.APP_URL??'http://localhost:3000').replace(/\/$/,'');
+const emailProvider=process.env.EMAIL_PROVIDER??(process.env.NODE_ENV==='production'?'resend':'local');
+if(emailProvider==='resend'&&(!process.env.EMAIL_API_KEY||!process.env.EMAIL_FROM))throw new Error('EMAIL_API_KEY and EMAIL_FROM are required for Resend');
+const sender=emailProvider==='resend'?new ResendEmailSender(process.env.EMAIL_API_KEY!,process.env.EMAIL_FROM!):new LocalEmailSender(process.env.EMAIL_OUTBOX_DIR??resolve('../../.local/mail'));
+const notifications=new NotificationService(pool,sender,appUrl);
 const sourceName=process.env.ORDER_SOURCE??'fixture';
 if(sourceName!=='fixture')throw new Error('Feed adapter requires an agreed feed contract');
 const queue=new Queue('sync-orders',{connection});
 await queue.upsertJobScheduler('periodic-sync',{every:60000},{name:'sync',data:{}});
 await queue.add('sync',{});
-const worker=new Worker('sync-orders',async()=>{const source=new FixtureSource(process.env.FIXTURE_EPOCH?new Date(process.env.FIXTURE_EPOCH):undefined);const result=await syncOrders(pool,source,sourceName);process.stdout.write(JSON.stringify({event:'sync_completed',...result})+'\n');},{connection,concurrency:1});
+const worker=new Worker('sync-orders',async()=>{const source=new FixtureSource(process.env.FIXTURE_EPOCH?new Date(process.env.FIXTURE_EPOCH):undefined);const result=await syncOrders(pool,source,sourceName);const delivery=await notifications.deliverPending();process.stdout.write(JSON.stringify({event:'sync_completed',...result,notifications:delivery})+'\n');},{connection,concurrency:1});
 worker.on('failed',(_job,error)=>process.stderr.write(JSON.stringify({event:'sync_failed',message:error.message})+'\n'));
 const fixtureRouting=new FixtureRouting();
 const routing=process.env.ROUTING_MODE==='fixture'

@@ -27,7 +27,8 @@ Additional verified work:
 - M3.1 Trip Detail is complete with trans.eu links, per-load booking actions and derived Planned / Booked / Done status.
 - M3.2 Trips is complete with Planned / Booked / Done tabs, status-aware light cards, guarded cancellation and swipe-to-reveal cancellation on touch screens. Cancellation is transactional.
 - The live browser flow `Find -> Builder -> Save -> Trip detail -> Mark booked -> Trips` was verified against PostgreSQL and Redis.
-- The current suite has 41 passing tests. Strict TypeScript, ESLint and the Next.js production build pass.
+- M3.3 Lost-order protection is complete. Sync marks unavailable pending trip orders as Lost, creates a unique notification record per order, and the worker delivers or records a retryable failure. Trip Detail shows the verified replacement alert and removes booking actions from lost loads.
+- The current suite has 43 passing tests. Strict TypeScript, ESLint and the Next.js production build pass.
 
 Pending acceptance:
 - M0.1 remains open because Docker is not installed; Compose startup and container healthchecks have not been executed.
@@ -37,4 +38,4 @@ Pending acceptance:
 - The intermediary order-feed contract and credentials will be supplied after the first deployment. Fixtures remain the active source.
 - Production email needs a verified sender and Resend key. Development mail uses the local outbox.
 
-M0.2–M0.5, M1, M2.1, M2.4 and M3.1–M3.2 are complete. M0.1 is environment-blocked. M2.2 is implemented and awaiting its 10k p95 benchmark. M2.3 is partially implemented. M3.3 is next.
+M0.2–M0.5, M1, M2.1, M2.4 and M3.1–M3.3 are complete. M0.1 is environment-blocked. M2.2 is implemented and awaiting its 10k p95 benchmark. M2.3 is partially implemented. M3.4 is next.

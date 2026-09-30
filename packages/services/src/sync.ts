@@ -20,9 +20,17 @@ export async function syncOrders(pool:Pool,source:OrderSource,name:string) {
  const closed=await source.fetchClosedIds(open.rows.map(r=>r.trans_eu_id));
  await db.query("UPDATE orders SET missed_syncs=CASE WHEN trans_eu_id=ANY($1::text[]) THEN missed_syncs+1 ELSE 0 END WHERE status='open'",[closed]);
  const result=await db.query("UPDATE orders SET status=CASE WHEN pickup_to<now() THEN 'expired' ELSE 'closed' END WHERE status='open' AND (missed_syncs>=2 OR pickup_to<now())");
+ const lost=await db.query(`WITH changed AS (
+  UPDATE trip_orders x SET status='lost' FROM orders o
+  WHERE x.order_id=o.id AND x.status='pending' AND o.status IN ('closed','expired')
+  RETURNING x.id,x.trip_id
+ )
+ INSERT INTO order_notifications(trip_order_id,user_id,kind)
+ SELECT changed.id,trips.user_id,'order_lost' FROM changed JOIN trips ON trips.id=changed.trip_id
+ ON CONFLICT(trip_order_id,kind) DO NOTHING RETURNING id`);
  await db.query('INSERT INTO sync_state(source,cursor) VALUES($1,$2) ON CONFLICT(source) DO UPDATE SET cursor=EXCLUDED.cursor',[name,batch.nextCursor]);
  await db.query('INSERT INTO sync_batches(source,imported,closed) VALUES($1,$2,$3)',[name,orders.length,result.rowCount]);
  await db.query('COMMIT');
- return {imported:orders.length,closed:result.rowCount};
+ return {imported:orders.length,closed:result.rowCount,lost:lost.rowCount};
  } catch(error) {await db.query('ROLLBACK');throw error;} finally {db.release();}
 }
