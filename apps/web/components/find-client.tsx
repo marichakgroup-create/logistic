@@ -1,12 +1,13 @@
 'use client';
 import {useEffect,useState,type FormEvent} from 'react';
-import {ArrowRight,CalendarDays,ChevronDown,PackageOpen} from 'lucide-react';
+import {ArrowRight,CalendarDays,PackageOpen} from 'lucide-react';
 import type {Location,OrderCard,SearchResult,Vehicle} from '@loadlink/core';
 import {api} from '../lib/api';
 import {euro,euroRate,flag,number,tomorrow,updatedText} from '../lib/format';
 import {Button} from './ui/button';
 import {Card} from './ui/card';
 import {Input} from './ui/input';
+import {Select} from './ui/select';
 
 type Sort='rate'|'price'|'pickup';
 export function FindClient({vehicle}:{vehicle:Vehicle}){
@@ -36,7 +37,7 @@ export function FindClient({vehicle}:{vehicle:Vehicle}){
    {error&&<p className="error-message" role="alert">{error}</p>}
    {loading&&!result&&<div className="skeleton-list" aria-label="Loading orders"><i/><i/><i/></div>}
    {result&&<section className="results" aria-live="polite">
-    <div className="results-head"><div><p className="section-label">ROUTES FOUND</p><h2>{result.orders.length} options</h2></div><label className="sort-label" htmlFor="sort"><span className="sr-only">Sort</span><span className="select-wrap"><select id="sort" value={sort} onChange={event=>{const next=event.target.value as Sort;setSort(next);void load(next);}}><option value="rate">Best value</option><option value="price">Highest price</option><option value="pickup">Pickup time</option></select><ChevronDown size={15}/></span></label></div>
+    <div className="results-head"><div><p className="section-label">ROUTES FOUND</p><h2>{result.orders.length} options</h2></div><label className="sort-label" htmlFor="sort"><span className="sr-only">Sort</span><Select id="sort" value={sort} onChange={event=>{const next=event.target.value as Sort;setSort(next);void load(next);}}><option value="rate">Best value</option><option value="price">Highest price</option><option value="pickup">Pickup time</option></Select></label></div>
     {result.orders.length===0?<Card className="empty-state"><PackageOpen size={30}/><h2>No fitting routes yet</h2><p>Try another route or date.</p></Card>:<div className="order-list">{result.orders.map((order,index)=><Order key={order.id} order={order} featured={index===0}/>)}</div>}
    </section>}
   </section>

@@ -36,8 +36,12 @@ Every product screen starts on a light canvas. Night surfaces are reserved for t
 
 Route lines draw over 400 ms. Add interactions fill a node and reflow over 200 ms. Reduced-motion preferences disable both.
 
+Controls keep native keyboard, touch and operating-system behavior while using LoadLink chrome. Selects use a white 14 px surface and route-toned chevron; checkboxes use a squared 7 px node that fills signal yellow; disclosures use a divider and rotating chevron. Context help opens from a small squared question control into a dark tooltip. Dialogs use a 24 px paper surface and restrained elevation.
+
+Tonal gradients are allowed only where they add depth to a functional focal surface: dark route controls, the featured result, vehicle/map art, and the primary signal action. Their endpoints remain close in luminance. Never use gradients as page backgrounds or decoration.
+
 ## Product rules
 
-Keep the interface understandable to a driver without training, with Find, Trips and Account only. Each screen has one primary action. Do not add decorative chip rows, icon circles, gradients, blue defaults, equal-weight card stacks or stock illustrations.
+Keep the interface understandable to a driver without training, with Find, Trips and Account only. Each screen has one primary action. Do not add decorative chip rows, icon circles, bright multi-color gradients, blue defaults, equal-weight card stacks or stock illustrations.
 
 The Behance Delivery Platform reference informs confidence, space, object-specific composition and consistent interaction. LoadLink keeps its own route-line concept, night/signal identity and freight workflow.
