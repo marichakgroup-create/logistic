@@ -1,4 +1,5 @@
 import './globals.css';
+import './workspace.css';
 import localFont from 'next/font/local';
 import type { Metadata, Viewport } from 'next';
 const manrope=localFont({src:'../../../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2',weight:'200 800',style:'normal',variable:'--font-manrope',display:'swap'});

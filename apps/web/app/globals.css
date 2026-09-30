@@ -269,3 +269,34 @@ input[type="checkbox"],input[type="radio"]{accent-color:var(--signal)}
 @media(max-width:760px){
  .trips-intro{min-height:190px}.trips-sheet{padding-top:0}.trip-tabs{min-height:62px;margin-bottom:22px}.trip-card-link{padding:21px 20px 17px}.trip-cancel-text{margin-right:20px}.trip-card-meta{gap:7px;font-size:.68rem}.trip-card-meta span+span:before{display:none}.trip-card-top>strong{font-size:1.55rem}.cancel-confirm{display:block;padding:18px}.cancel-confirm>div:last-child{justify-content:flex-end;margin-top:14px}.trips-empty{padding-top:28px}
 }
+
+/* Desktop workspace shell: persistent product navigation and page-specific work areas. */
+.app-sidebar{position:fixed;z-index:40;inset:0 auto 0 0;width:256px;display:flex;flex-direction:column;padding:30px 18px 22px;border-right:1px solid var(--line);background:var(--paper)}
+.app-sidebar .brand{padding:0 12px;color:var(--ink)}.app-sidebar .brand-light{color:var(--ink-2)}
+.sidebar-label{margin:48px 12px 12px;color:#84909e;font-size:.63rem;line-height:1;letter-spacing:.09em;font-weight:800}
+.app-sidebar .navigation{display:flex;height:auto;flex-direction:column;gap:7px}
+.app-sidebar .nav-link{display:grid;grid-template-columns:38px 1fr;place-items:initial;align-items:center;align-content:initial;gap:6px;height:64px;padding:0 12px;border-radius:15px;color:#526174;font-size:inherit;text-decoration:none;transition:background-color .16s,color .16s,transform .16s}
+.app-sidebar .nav-link:hover{background:#f3f5f6;color:var(--ink)}.app-sidebar .nav-link:active{transform:translateY(1px)}
+.app-sidebar .nav-link svg{width:20px;height:20px}.app-sidebar .nav-link>span{display:grid;gap:2px}.app-sidebar .nav-link strong{font-size:.86rem;letter-spacing:-.01em}.app-sidebar .nav-link small{color:#8a96a3;font-size:.66rem;font-weight:600}
+.app-sidebar .nav-link.active{background:var(--night-2);color:#fff}.app-sidebar .nav-link.active svg{color:var(--signal)}.app-sidebar .nav-link.active small{color:#a9b6c4}
+.sidebar-foot{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;align-items:center;margin-top:auto;padding:16px 10px 0;border-top:1px solid var(--line)}.sidebar-foot>span{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:#eef1f3;color:var(--ink);font-size:.78rem;font-weight:800}.sidebar-foot>div{display:grid;min-width:0}.sidebar-foot strong{font-size:.72rem}.sidebar-foot small{overflow:hidden;color:var(--ink-2);font-size:.61rem;text-overflow:ellipsis;white-space:nowrap}
+.app-main{width:auto;max-width:none;margin:0 0 0 256px;padding:0 34px 90px}.app-main>section{width:100%;max-width:1180px;margin-left:auto;margin-right:auto}
+.app-main .page-intro{min-height:190px;padding:42px 20px 30px}.app-main .page-intro h1{font-size:3.55rem}.app-main .screen-hero{padding-top:42px}
+.trips-sheet{padding:26px 28px 72px}
+.trips-workspace{display:grid;grid-template-columns:190px minmax(0,1fr);gap:28px;align-items:start}
+.trip-status-panel{position:sticky;top:24px;padding:20px;border-radius:18px;background:var(--paper)}
+.trip-status-panel>.section-label{margin:2px 10px 13px}
+.trip-tabs{display:flex;min-height:0;flex-direction:column;gap:5px;margin:0;border:0}
+.trip-tabs a{display:flex;min-height:48px;align-items:center;justify-content:space-between;padding:0 11px;border-radius:12px;color:#637183;font-size:.75rem;font-weight:750}
+.trip-tabs a:after{display:none}.trip-tabs a>span{display:inline-flex;align-items:center;gap:9px}.trip-tabs a i{width:7px;height:7px;border:1.5px solid #8b98a6;border-radius:50%}.trip-tabs a b{font-size:.67rem;font-variant-numeric:tabular-nums}
+.trip-tabs a:hover{background:#f2f4f5;color:var(--ink)}.trip-tabs a.active{background:var(--night-2);color:#fff}.trip-tabs a.active i{border-color:var(--signal);background:var(--signal)}.trip-tabs a.active b{color:var(--signal)}
+.trip-panel-note{margin-top:20px;padding:17px 10px 4px;border-top:1px solid var(--line)}.trip-panel-note strong{font-size:.72rem}.trip-panel-note p{margin:5px 0 0;color:var(--ink-2);font-size:.68rem;line-height:1.45}
+.trip-workspace-main{min-width:0}.trip-workspace-head{display:flex;min-height:74px;align-items:start;justify-content:space-between;margin-bottom:16px;padding:5px 2px 0}.trip-workspace-head h2{margin:3px 0 0;font-size:1.45rem}.trip-workspace-head>span{padding-top:17px;color:var(--ink-2);font-size:.72rem;font-weight:800}
+.trip-list-card{outline-color:rgba(13,27,42,.06)}
+@media(max-width:760px){
+ .app-sidebar{position:static;width:100%;height:72px;display:flex;padding:0 20px;border:0;border-bottom:1px solid var(--line);align-items:center}.app-sidebar .brand{padding:0}.sidebar-label,.sidebar-foot{display:none}
+ .app-sidebar .navigation{position:fixed;z-index:40;left:50%;bottom:18px;width:min(430px,calc(100% - 32px));height:72px;display:grid;grid-template-columns:repeat(3,1fr);gap:0;padding:7px;border-radius:28px;background:var(--night);box-shadow:0 8px 24px rgba(13,27,42,.25);transform:translateX(-50%)}
+ .app-sidebar .nav-link,.app-sidebar .nav-link:hover{display:grid;grid-template-columns:1fr;place-items:center;align-content:center;gap:3px;height:100%;padding:0;border-radius:18px;background:transparent;color:#8fa1b5}.app-sidebar .nav-link>span{display:block}.app-sidebar .nav-link strong{font-size:.68rem}.app-sidebar .nav-link small{display:none}.app-sidebar .nav-link.active{background:transparent;color:var(--signal)}
+ .app-main{width:100%;margin:0;padding:0 0 118px}.app-main .page-intro{min-height:188px;padding:26px 20px 28px}.app-main .page-intro h1{font-size:2.65rem}.app-main .screen-hero{padding-top:26px}
+ .trips-sheet{padding:22px 20px 102px}.trips-workspace{display:block}.trip-status-panel{position:static;padding:0;background:transparent}.trip-status-panel>.section-label,.trip-panel-note{display:none}.trip-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:24px;padding:4px;border:1px solid var(--line);border-radius:15px;background:#e6eaed}.trip-tabs a{min-height:44px;justify-content:center;padding:0 6px}.trip-tabs a b{display:none}.trip-tabs a.active{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(13,27,42,.07)}.trip-tabs a.active i{border-color:var(--signal);background:var(--signal)}.trip-workspace-head{min-height:64px;margin-bottom:12px}.trip-workspace-head h2{font-size:1.25rem}
+}
