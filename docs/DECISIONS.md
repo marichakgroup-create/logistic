@@ -33,4 +33,5 @@
 - The Behance Delivery Platform reference informs scale, space and bespoke logistics composition. LoadLink retains its own information architecture and route-first workflow.
 - Full guidance lives in `docs/DESIGN-v2.md` and applies to all current and future screens.
 - Restrained same-hue gradients may add depth to functional focal surfaces. Native select, date and form behavior stays intact beneath branded controls so touch and keyboard interaction remain predictable.
+- Do not create custom illustrative SVG artwork. User-provided or generated assets are the only product imagery; universal control icons remain allowed.
 - `FixtureRouting` is deterministic local-development infrastructure only. Production continues to require OSRM with Google Routes fallback and never substitutes estimated straight-line routing.

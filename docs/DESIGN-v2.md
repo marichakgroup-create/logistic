@@ -45,3 +45,5 @@ Tonal gradients are allowed only where they add depth to a functional focal surf
 Keep the interface understandable to a driver without training, with Find, Trips and Account only. Each screen has one primary action. Do not add decorative chip rows, icon circles, bright multi-color gradients, blue defaults, equal-weight card stacks or stock illustrations.
 
 The Behance Delivery Platform reference informs confidence, space, object-specific composition and consistent interaction. LoadLink keeps its own route-line concept, night/signal identity and freight workflow.
+
+Illustrations are never drawn as ad-hoc inline SVG. Product imagery must be supplied by the user or generated as an approved asset. Universal interface icons may remain vector icons; meaningful product state should prefer typography, data and the Route Line.

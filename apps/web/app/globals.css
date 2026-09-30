@@ -98,6 +98,16 @@ html,body{background:var(--canvas);color:var(--ink)}
 .capacity-note{color:var(--profit)}
 .status-pill{color:var(--profit)}
 .empty-state{border:1px solid var(--line)}
+.brand-mark{position:relative;display:block;width:30px;height:30px;border-radius:9px;background:var(--signal)}
+.brand-mark i,.brand-mark b{position:absolute;left:8px;right:8px;height:2px;background:var(--night);border-radius:2px}
+.brand-mark i{top:10px}.brand-mark b{bottom:10px}
+.brand-mark i:before,.brand-mark i:after,.brand-mark b:before,.brand-mark b:after{content:"";position:absolute;top:-2px;width:6px;height:6px;border:2px solid var(--night);border-radius:50%;background:var(--signal)}
+.brand-mark i:before,.brand-mark b:before{left:-3px}.brand-mark i:after,.brand-mark b:after{right:-3px}
+.vehicle-summary{margin-bottom:24px;padding:22px;border-radius:20px;background-image:linear-gradient(145deg,#182d45 0%,#13253a 100%);color:#fff}
+.vehicle-summary>p{margin:0 0 16px;color:#a6b4c5;font-size:.67rem;line-height:1;letter-spacing:.08em;font-weight:800}
+.vehicle-summary>div{display:flex;align-items:end;justify-content:space-between;gap:16px}
+.vehicle-summary strong{font-size:1.5rem;line-height:1}
+.vehicle-summary span{color:#a6b4c5;font-size:.78rem;font-variant-numeric:tabular-nums}
 .content-sheet{border-radius:28px}
 .preset{min-height:44px}
 .skeleton-list i{position:relative;overflow:hidden;background:var(--paper);border:1px solid var(--line)}
@@ -108,6 +118,7 @@ html,body{background:var(--canvas);color:var(--ink)}
  .route-form{border-radius:20px}
  .login-form{padding:28px 22px}
  .presets{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .vehicle-summary>div{display:grid;gap:7px}
 }
 
 /* Branded interaction layer: restrained depth with native, accessible behavior. */
