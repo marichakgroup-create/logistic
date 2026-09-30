@@ -1,6 +1,7 @@
 import {Worker,Queue} from 'bullmq';
 import {Pool} from 'pg';
-import {FixtureSource,syncOrders} from '@loadlink/services';
+import {AddonMatchingService,CachedRouting,FixtureRouting,GoogleRouting,LegRoutePlanner,OsrmRouting,PostgresRouteCache,FixtureSource,syncOrders} from '@loadlink/services';
+import type {AddonQuery,AddonResult} from '@loadlink/core';
 const redis=new URL(process.env.REDIS_URL??'redis://localhost:6379');
 const connection={host:redis.hostname,port:Number(redis.port||6379),password:redis.password||undefined};
 const pool=new Pool({connectionString:process.env.DATABASE_URL});
@@ -11,4 +12,15 @@ await queue.upsertJobScheduler('periodic-sync',{every:60000},{name:'sync',data:{
 await queue.add('sync',{});
 const worker=new Worker('sync-orders',async()=>{const source=new FixtureSource(process.env.FIXTURE_EPOCH?new Date(process.env.FIXTURE_EPOCH):undefined);const result=await syncOrders(pool,source,sourceName);process.stdout.write(JSON.stringify({event:'sync_completed',...result})+'\n');},{connection,concurrency:1});
 worker.on('failed',(_job,error)=>process.stderr.write(JSON.stringify({event:'sync_failed',message:error.message})+'\n'));
-for(const signal of ['SIGTERM','SIGINT'])process.on(signal,async()=>{await worker.close();await queue.close();await pool.end();process.exit(0);});
+const fixtureRouting=new FixtureRouting();
+const routing=process.env.ROUTING_MODE==='fixture'
+ ?fixtureRouting
+ :new CachedRouting(new OsrmRouting(process.env.OSRM_URL??'http://localhost:5000'),new GoogleRouting(process.env.GOOGLE_ROUTES_KEY??''),new PostgresRouteCache(pool));
+const matcher=new AddonMatchingService(pool,new LegRoutePlanner(routing));
+type MatchJob={userId:string;mainOrderId:string;query:AddonQuery};
+const matchWorker=new Worker<MatchJob,AddonResult>('match-orders',async job=>{
+ const result=await matcher.match(job.data.userId,job.data.mainOrderId,job.data.query);
+ process.stdout.write(JSON.stringify({event:'match_completed',jobId:job.id,suggestions:result.suggestions.length,partial:result.partial})+'\n');return result;
+},{connection,concurrency:2});
+matchWorker.on('failed',(job,error)=>process.stderr.write(JSON.stringify({event:'match_failed',jobId:job?.id,message:error.message})+'\n'));
+for(const signal of ['SIGTERM','SIGINT'])process.on(signal,async()=>{await matchWorker.close();await worker.close();await queue.close();await pool.end();process.exit(0);});

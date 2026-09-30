@@ -5,9 +5,10 @@ import { NestFactory } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import type { Pool } from 'pg';
 import { z, ZodError } from 'zod';
-import { magicLinkRequestSchema, type SessionUser } from '@loadlink/core';
+import { addonQuerySchema, magicLinkRequestSchema, type SessionUser } from '@loadlink/core';
 import { AuthService, VehicleService, OrderService, ServiceError, enforceRequestLimit,
   SESSION_SECONDS, type EmailSender } from '@loadlink/services';
+import type {AddonDispatcher} from './addon-queue';
 
 export type AppConfig = { appUrl: string; sessionSecret: string; production: boolean };
 function cookieToken(request: Request): string | undefined {
@@ -30,7 +31,7 @@ class ErrorFilter implements ExceptionFilter {
   }
 }
 
-export async function createApp(pool: Pool, sender: EmailSender, config: AppConfig) {
+export async function createApp(pool: Pool, sender: EmailSender, config: AppConfig, addons?: AddonDispatcher) {
   const auth = new AuthService(pool, sender, config.sessionSecret, config.appUrl);
   const vehicles = new VehicleService(pool);
   const orders = new OrderService(pool);
@@ -76,6 +77,11 @@ export async function createApp(pool: Pool, sender: EmailSender, config: AppConf
     @Get('orders') async search(@Query() query: unknown, @Req() request: Request) { return orders.search((await user(request)).id, query); }
     @Get('orders/:id') async detail(@Param('id') id: string, @Query('vehicleId') vehicleId: string, @Req() request: Request) {
       return { order: await orders.detail((await user(request)).id, id, vehicleId) };
+    }
+    @Get('orders/:id/addons') async addonMatches(@Param('id') id: string, @Query() query: unknown, @Req() request: Request) {
+      if(!addons)throw new ServiceError('MATCH_UNAVAILABLE','Route matching is temporarily unavailable.',503);
+      z.string().uuid().parse(id);
+      return addons.get({userId:(await user(request)).id,mainOrderId:id,query:addonQuerySchema.parse(query)});
     }
     @Get('locations') async locations(@Query('q') query: string, @Req() request: Request) {
       await user(request); return { locations: await orders.locations(z.string().max(120).parse(query ?? '')) };

@@ -26,9 +26,10 @@
 - Vehicle presets are editable starting values, not certified specifications of every trim. Operators confirm dimensions and payload.
 - Local email writes development-only outbox files; production requires Resend credentials and verified sender. Links are never returned in API responses.
 
-# Design direction — 2026-09-30
+# Design direction v2 — 2026-09-30
 
-- Preserve the simple one-hand mobile flow and current blue LoadLink identity.
-- Apply the supplied premium shipping references through custom logistics SVGs, route threads, physical-label card proportions and compact labels. Do not copy their sidebar structure or green brand.
-- Product-specific illustrations replace generic icon-in-square treatment where they communicate cargo or route state. Lucide remains for universal controls such as calendar, account and back.
-- Full guidance lives in `docs/DESIGN.md` and applies to new screens from M2 onward.
+- The user-approved Route Line system supersedes the visual colors and tokens in `files/05-ui-spec.md` and the earlier blue direction.
+- LoadLink is light-first. Night navy is reserved for structural components, signal yellow marks one primary action plus the main route, and Manrope, a single inverted hero card and a floating three-tab bar provide the visual identity.
+- The Behance Delivery Platform reference informs scale, space and bespoke logistics composition. LoadLink retains its own information architecture and route-first workflow.
+- Full guidance lives in `docs/DESIGN-v2.md` and applies to all current and future screens.
+- `FixtureRouting` is deterministic local-development infrastructure only. Production continues to require OSRM with Google Routes fallback and never substitutes estimated straight-line routing.

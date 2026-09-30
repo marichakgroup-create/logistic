@@ -33,3 +33,11 @@ export class GoogleRouting implements RoutingProvider {
  constructor(private key:string){}
  async route(stops:Point[]):Promise<Route>{if(!this.key)throw new Error('Google routing key absent');const waypoint=(p:Point)=>({location:{latLng:{latitude:p.lat,longitude:p.lon}}});const response=await fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{method:'POST',signal:AbortSignal.timeout(2500),headers:{'Content-Type':'application/json','X-Goog-Api-Key':this.key,'X-Goog-FieldMask':'routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline'},body:JSON.stringify({origin:waypoint(stops[0]),destination:waypoint(stops[stops.length-1]),intermediates:stops.slice(1,-1).map(waypoint),travelMode:'DRIVE'})});if(!response.ok)throw new Error('Google routing failed');const data=z.object({routes:z.array(z.object({distanceMeters:z.number().nonnegative(),duration:z.string().regex(/^\d+(\.\d+)?s$/),polyline:z.object({encodedPolyline:z.string()})})).min(1)}).parse(await response.json());const r=data.routes[0];return {polyline:r.polyline.encodedPolyline,km:r.distanceMeters/1000,minutes:parseFloat(r.duration)/60};}
 }
+export class FixtureRouting implements RoutingProvider {
+ async route(stops:Point[]):Promise<Route>{
+  let km=0;for(let index=1;index<stops.length;index++){const a=stops[index-1],b=stops[index];const lat=(value:number)=>value*Math.PI/180;
+   const dLat=lat(b.lat-a.lat),dLon=lat(b.lon-a.lon);const h=Math.sin(dLat/2)**2+Math.cos(lat(a.lat))*Math.cos(lat(b.lat))*Math.sin(dLon/2)**2;
+   km+=6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));}
+  return{polyline:'',km:km*1.18,minutes:km*1.18/65*60};
+ }
+}

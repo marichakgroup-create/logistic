@@ -1,3 +1,4 @@
+import {z} from 'zod';
 import type { Point, Route } from './index';
 import type { VehicleInput } from './account';
 
@@ -11,6 +12,13 @@ export type RejectReason='CAPACITY_KG'|'CAPACITY_M3'|'DIMENSIONS'|'DETOUR'|'TIME
 export type Suggestion={order:MatchOrder;addedRevenue:number;detourKm:number;detourMin:number;loadPctKg:number;loadPctM3:number|null;fit:'green'|'yellow';score:number;newEndTime:string;stops:TripStop[]};
 export type Rejected={order:MatchOrder;reason:RejectReason};
 export type MatchResult={suggestions:Suggestion[];rejected:Rejected[]};
+export const addonQuerySchema=z.object({
+ vehicleId:z.string().uuid(),
+ bufferKm:z.coerce.number().int().min(5).max(100).default(25),
+ tripId:z.string().uuid().optional()
+});
+export type AddonQuery=z.infer<typeof addonQuerySchema>;
+export type AddonResult=MatchResult&{partial:boolean;updatedAt:string|null};
 export type PlannedRoute=Route&{legsMinutes:number[]};
 export interface RoutePlanner{plan(routes:TripStop[][]):Promise<PlannedRoute[]>}
 

@@ -9,6 +9,7 @@
   "dependencies": {
     "bullmq": "^5.40.0",
     "pg": "^8.13.0",
-    "@loadlink/services": "*"
+    "@loadlink/services": "*",
+    "@loadlink/core": "*"
   }
 }

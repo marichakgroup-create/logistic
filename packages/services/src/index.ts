@@ -6,3 +6,4 @@ export * from './email';
 export * from './auth';
 export * from './vehicles';
 export * from './orders';
+export * from './addons';

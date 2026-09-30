@@ -1,6 +1,6 @@
 # LoadLink
 
-Mobile-first van freight planning app. M0 foundation and the M1 account/search flow are implemented; later milestones follow `docs/PLAN.md`.
+Mobile-first van freight planning app. M0 foundation, M1 account/search and the M2 matching foundation are implemented; later milestones follow `docs/PLAN.md`.
 
 ## Local checks
 

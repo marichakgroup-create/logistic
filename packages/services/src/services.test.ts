@@ -1,6 +1,7 @@
 import {describe,it,expect,vi} from 'vitest';
 import {FixtureSource,normalize} from './fixtures';
-import {CachedRouting,RoutingUnavailable,type RouteCache} from './routing';
+import {CachedRouting,FixtureRouting,RoutingUnavailable,type RouteCache} from './routing';
+import {LegRoutePlanner} from './addons';
 import type {Route} from '@loadlink/core';
 const stops=[{lat:52,lon:13},{lat:53,lon:14}];
 const route={polyline:'abc',km:100,minutes:90};
@@ -15,4 +16,11 @@ describe('cached routing',()=>{
  it('uses fallback when OSRM fails',async()=>{const fallback={route:vi.fn(async()=>route)};const routing=new CachedRouting({route:async()=>{throw new Error('down');}},fallback,cache());expect(await routing.route(stops)).toEqual(route);expect(fallback.route).toHaveBeenCalledOnce();});
  it('rejects when both providers fail and does not cache failures',async()=>{const primary={route:vi.fn(async()=>{throw new Error('down');})};const routing=new CachedRouting(primary,primary,cache());await expect(routing.route(stops)).rejects.toBeInstanceOf(RoutingUnavailable);await expect(routing.route(stops)).rejects.toBeInstanceOf(RoutingUnavailable);expect(primary.route).toHaveBeenCalledTimes(4);});
  it('coalesces simultaneous identical routes',async()=>{const primary={route:vi.fn(async()=>route)};const routing=new CachedRouting(primary,primary,cache());await Promise.all([routing.route(stops),routing.route(stops)]);expect(primary.route).toHaveBeenCalledOnce();});
+});
+describe('matching routing adapter',()=>{
+ it('builds deterministic development routes without network access',async()=>{const routing=new FixtureRouting();const a=await routing.route(stops);const b=await routing.route(stops);expect(a).toEqual(b);expect(a.km).toBeGreaterThan(100);expect(a.minutes).toBeGreaterThan(0);});
+ it('deduplicates legs and preserves zero-distance stops',async()=>{const route=vi.fn(async()=>({polyline:'',km:10,minutes:12}));const planner=new LegRoutePlanner({route});const point={lat:52,lon:13};const next={lat:53,lon:14};
+  const stop=(p:typeof point)=>({orderId:'a',kind:'pickup' as const,point:p,windowFrom:'2026-01-01T00:00:00.000Z',windowTo:'2026-01-02T00:00:00.000Z',weightKg:1,volumeM3:1});
+  const [planned]=await planner.plan([[stop(point),stop(point),stop(next)],[stop(point),stop(next)]]);expect(route).toHaveBeenCalledOnce();expect(planned.km).toBe(10);expect(planned.legsMinutes).toEqual([0,12]);
+ });
 });
