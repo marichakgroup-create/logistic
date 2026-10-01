@@ -1,0 +1,15 @@
+{
+  "name": "@loadlink/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/main.ts",
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "bullmq": "^5.40.0",
+    "pg": "^8.13.0",
+    "@loadlink/services": "*",
+    "@loadlink/core": "*"
+  }
+}
