@@ -49,7 +49,7 @@
 - Capacity metrics are peak onboard kg/m³ per route leg. Unknown volume is retained as null. Timeline returns arrival/departure times and onboard cargo after every stop.
 - Save requests bypass the suggestion cache and calculate the complete selected route. Order and vehicle fingerprints are compared under database share locks before the transaction commits. Cached suggestions alone are no longer accepted as proof that a whole trip is feasible.
 - Persist the server route snapshot in nullable `trips.route_plan` (migration 0003); existing trips retain their previous detail view. New trip distance/end time come from the route calculation, not the sum of individual detours or the last delivery-window deadline.
-- MapLibre is lazy-loaded; configurable raster tiles use `NEXT_PUBLIC_MAP_TILE_URL`. OSRM/Google polylines supply road geometry. Development fixture routing supplies no road geometry: show numbered stops with an explicit missing-road-line label, never invent a road route. Fixture routing is rejected in production.
+- MapLibre is lazy-loaded; configurable raster tiles use `NEXT_PUBLIC_MAP_TILE_URL`. OSRM/Google polylines supply road geometry. Development fixture routing supplies no road geometry: connect numbered stops with a dashed straight-line guide, explicitly label it as a stop guide, and never present it as a road route. Fixture routing is rejected in production.
 - M2 candidate routing is capped at 100 orders. The existing 10k/p95 benchmark, new selection/save regression cases, map/browser acceptance and updates to legacy TripService test fixtures are reserved for the deferred test phase.
 
 ## 2026-10-01 — Bounded matching and feed preparation

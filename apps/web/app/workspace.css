@@ -77,6 +77,15 @@
 .app-frame .route-metrics>div:last-child{grid-column:auto}
 .app-frame .load-gauges{max-width:620px;gap:18px;margin-bottom:20px}
 .app-frame .route-map{margin-bottom:24px}
+.app-frame .route-map{border-color:#dbe1dc;box-shadow:0 8px 24px #1824330d}
+.app-frame .route-map-canvas{background:#f3f5f1}
+.app-frame .route-map figcaption{background:#fbfcfa;border-top:1px solid #e5e9e3}
+.app-frame .route-map figcaption .main{background:#26394a}
+.app-frame .route-map figcaption .addon{background:#c48600}
+.app-frame .route-map-stop{box-shadow:0 2px 9px #1824333d}
+.app-frame .route-map-stop.main{background:#26394a;color:#fff}
+.app-frame .route-map-stop.addon{background:#ffd65a;color:#182433}
+.app-frame .map-geometry-note{color:#5f6b70}
 .app-frame .route-map-canvas,.app-frame .route-map-placeholder{height:260px;min-height:220px}
 .app-frame .builder-heading{align-items:end;margin:8px 0 16px}
 .app-frame .builder-heading h1{font-size:22px}
