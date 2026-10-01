@@ -21,4 +21,4 @@ const addons=new BullAddonDispatcher({host:redis.hostname,port:Number(redis.port
 const app = await createApp(pool, sender, { appUrl, sessionSecret: secret, production },addons);
 app.enableShutdownHooks();
 for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, async () => { await app.close(); await addons.close(); await pool.end(); process.exit(0); });
-await app.listen(Number(process.env.PORT ?? 3001), process.env.HOST ?? '127.0.0.1');
+await app.listen(Number(process.env.PORT ?? 3001), process.env.HOST ?? '0.0.0.0');

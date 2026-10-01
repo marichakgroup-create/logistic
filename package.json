@@ -13,7 +13,11 @@
     "migrate": "tsx infra/migrate.ts",
     "mail:latest": "tsx infra/latest-mail.ts",
     "start": "npm run start --workspace=@loadlink/web",
-    "build:web": "npm run build --workspace=@loadlink/web"
+    "build:web": "npm run build --workspace=@loadlink/web",
+    "start:api": "npm run start --workspace=@loadlink/api",
+    "start:worker": "npm run start --workspace=@loadlink/worker",
+    "deploy:plan": "railway config plan",
+    "deploy:apply": "railway config apply"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -21,6 +25,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
+    "railway": "^3.12.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.0.0",

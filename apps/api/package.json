@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/main.ts",
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "start": "tsx src/main.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
