@@ -10,3 +10,5 @@ export * from './addons';
 export * from './trips';
 export * from './notifications';
 export * from './matching-data';
+
+export * from './trip-context';

@@ -20,7 +20,7 @@ orders along the route**, auto-filtered by vehicle capacity, time windows and de
 
 ## Hard rules
 1. **Scope lock:** implement only what `06-roadmap.md` lists for the current milestone. No extra features/menus.
-2. **UX rule:** max 1 primary action per screen; mobile tab bar has exactly 3 items: Find · Trips · Account.
+2. **UX rule:** max 1 primary action per screen; mobile tab bar has exactly 3 items: Orders · Trips · Account.
 3. **UI language:** English only. Currency EUR, distance km, weight kg, volume m³.
 4. **Order source is an adapter** (`OrderSource` interface, see architecture). Never hardcode trans.eu specifics in core logic.
 5. **Never auto-book or call trans.eu booking endpoints.** Only deep-link to `orders.trans_eu_url`.

@@ -17,11 +17,12 @@ export const addonQuerySchema=z.object({
  vehicleId:z.string().uuid(),
  bufferKm:z.coerce.number().int().min(5).max(100).default(25),
  tripId:z.string().uuid().optional(),
+ refresh:z.enum(['true','false']).optional(),
  addonOrderIds:z.preprocess(value=>typeof value==='string'?(value?value.split(','):[]):value,z.array(z.string().uuid()).max(4)).default([])
 }).refine(value=>new Set(value.addonOrderIds).size===value.addonOrderIds.length,'Duplicate add-on orders');
 export type AddonQuery=z.infer<typeof addonQuerySchema>;
 export type StopTiming={arrivalAt:string;departureAt:string;onboardKg:number;onboardM3:number|null};
-export type TripPlan={orders:MatchOrder[];inputFingerprint:string;stops:TripStop[];timings:StopTiming[];departAt:string;endAt:string;totalKm:number;detourKm:number;totalMinutes:number;totalRevenue:number;loadPctKg:number;loadPctM3:number|null;geometry:Point[][];mainGeometry:Point[][]};
+export type TripPlan={tripRevision?:number;orders:MatchOrder[];inputFingerprint:string;stops:TripStop[];timings:StopTiming[];departAt:string;endAt:string;totalKm:number;detourKm:number;totalMinutes:number;totalRevenue:number;loadPctKg:number;loadPctM3:number|null;geometry:Point[][];mainGeometry:Point[][]};
 export type AddonResult=MatchResult&{pending?:boolean;partial:boolean;updatedAt:string|null;trip?:TripPlan};
 export type PlannedRoute=Route&{legsMinutes:number[];geometry?:Point[][]};
 export interface RoutePlanner{plan(routes:TripStop[][]):Promise<PlannedRoute[]>}
@@ -92,9 +93,9 @@ export async function evaluateAddons(main:MatchOrder,trip:MatchTrip,vehicle:Vehi
   const detourKm=Math.max(0,route.km-trip.baseKm);
   const score=order.priceEur!-detourKm*opts.costPerKm;if(score<=0){rejected.push({order,reason:'DETOUR'});continue;}
   suggestions.push({order,addedRevenue:order.priceEur!,detourKm,detourMin:Math.max(0,route.minutes-trip.baseMinutes),loadPctKg:load.loadPctKg,loadPctM3:load.loadPctM3,fit:load.loadPctKg<=85&&load.loadPctM3!==null&&load.loadPctM3<=85&&time.minSlack>=30?'green':'yellow',score,newEndTime:new Date(time.endTime).toISOString(),stops:chosenStops});
-  await progress?.publish({suggestions:[...suggestions].sort((a,b)=>b.score-a.score).slice(0,opts.maxAddons-trip.addonIds.length),rejected:[...rejected],partial:true});
+  await progress?.publish({suggestions:[...suggestions].sort((a,b)=>b.score-a.score).slice(0,20),rejected:[...rejected],partial:true});
  }
- const available=Math.max(0,opts.maxAddons-trip.addonIds.length);suggestions.sort((a,b)=>b.score-a.score);return{suggestions:suggestions.slice(0,available),rejected,partial};
+ const available=20;suggestions.sort((a,b)=>b.score-a.score);return{suggestions:suggestions.slice(0,available),rejected,partial};
 }
 
 export async function suggestAddons(main:MatchOrder,trip:MatchTrip,vehicle:VehicleInput,pool:MatchOrder[],planner:RoutePlanner,opts:Partial<MatchOpts>={}):Promise<Suggestion[]>{return(await evaluateAddons(main,trip,vehicle,pool,planner,opts)).suggestions;}

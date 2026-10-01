@@ -9,6 +9,6 @@ export async function serverApi<T>(path: string): Promise<T> {
     headers: { Cookie: cookieStore.toString() }, cache: 'no-store', signal: AbortSignal.timeout(10000),
   });
   if (response.status === 401) redirect('/login');
-  if (!response.ok) throw new Error('Could not load data. Please try again.');
+  if (!response.ok) { const data=await response.json().catch(()=>null); throw new Error(data?.error?.message??'The service is temporarily unavailable. Please retry.'); }
   return response.json() as Promise<T>;
 }

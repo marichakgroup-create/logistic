@@ -42,8 +42,8 @@ function fromRow(row: OrderRow, dimensionsUnknown: boolean): OrderCard {
     syncedAt: row.synced_at.toISOString(), dimensionsUnknown };
 }
 function dimensionsUnknown(row: OrderRow, vehicle: { lengthCm: number | null; widthCm: number | null; heightCm: number | null }) {
-  return (row.length_cm !== null && vehicle.lengthCm === null) ||
-    (row.width_cm !== null && vehicle.widthCm === null) || (row.height_cm !== null && vehicle.heightCm === null);
+  return row.length_cm === null || vehicle.lengthCm === null ||
+    row.width_cm === null || vehicle.widthCm === null || row.height_cm === null || vehicle.heightCm === null;
 }
 export class OrderService {
   private vehicles: VehicleService;

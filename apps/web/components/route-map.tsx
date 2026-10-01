@@ -5,6 +5,7 @@ import type {GeoJSONSource,Map as LibreMap,Marker} from 'maplibre-gl';
 import type {Point,TripPlan} from '@loadlink/core';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+maplibregl.setWorkerUrl('/maplibre/maplibre-gl-worker.mjs');
 const tileUrl=process.env.NEXT_PUBLIC_MAP_TILE_URL??'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 function lines(geometry:Point[][]):GeoJSON.Feature<GeoJSON.MultiLineString>{return{type:'Feature',properties:{},geometry:{type:'MultiLineString',coordinates:geometry.filter(points=>points.length>=2).map(points=>points.map(point=>[point.lon,point.lat]))}};}
 

@@ -4,7 +4,8 @@ import {VehicleService} from './vehicles';
 import {ServiceError} from './errors';
 
 import {defaultMatchOpts,capacity,timeline,dimensionsFit,type Point,type TripPlan,type Vehicle} from '@loadlink/core';
-import {matchColumns,matchOrder,readMatchOrders,matchFingerprint,type MatchRow} from './matching-data';
+import {matchColumns,matchOrder,matchFingerprint,type MatchRow} from './matching-data';
+import {readPlanningOrders,readTripContext} from './trip-context';
 const candidateLimit=100;
 
 function stops(value:MatchOrder):TripStop[]{return[
@@ -39,20 +40,22 @@ export class AddonMatchingService{
  async match(userId:string,mainOrderId:string,rawQuery:unknown,planOnly=false,publish?:(result:AddonResult)=>Promise<void>):Promise<AddonResult>{
   const deadline=Date.now()+3500;
   const query=addonQuerySchema.parse(rawQuery);const vehicle=await this.vehicles.getOwned(userId,query.vehicleId);
-  let addonIds=query.addonOrderIds;
-  if(query.tripId){
-   const existing=await this.pool.query<{order_id:string}>(`SELECT x.order_id FROM trips t JOIN trip_orders x ON x.trip_id=t.id WHERE t.id=$1 AND t.user_id=$2 AND t.main_order_id=$3 AND t.vehicle_id=$4 AND x.role='addon' AND x.status NOT IN('dropped','lost') ORDER BY x.seq`,[query.tripId,userId,mainOrderId,query.vehicleId]);
-   const owned=await this.pool.query('SELECT id FROM trips WHERE id=$1 AND user_id=$2 AND main_order_id=$3 AND vehicle_id=$4',[query.tripId,userId,mainOrderId,query.vehicleId]);
-   if(!owned.rows[0])throw new ServiceError('TRIP_NOT_FOUND','Trip not found.',404);
-   if(!addonIds.length)addonIds=existing.rows.map(row=>row.order_id);
-  }
+  const addonIds=query.addonOrderIds;
+  const context=query.tripId?await readTripContext(this.pool,userId,query.tripId):undefined;
+  if(context&&(context.main_order_id!==mainOrderId||context.vehicle_id!==query.vehicleId))throw new ServiceError('TRIP_NOT_FOUND','Trip not found.',404);
   if(addonIds.includes(mainOrderId))throw new ServiceError('INVALID_INPUT','The main load cannot also be an add-on.',400);
-  const orders=await readMatchOrders(this.pool,[mainOrderId,...addonIds]);const main=orders[0];
-  if(!dimensionsFit(main,vehicle))throw new ServiceError('CAPACITY_EXCEEDED','The main load does not fit your van.',409);
+  const orders=await readPlanningOrders(this.pool,[mainOrderId,...addonIds],context);const main=orders[0];
+  if(orders.some(order=>!dimensionsFit(order,vehicle)))throw new ServiceError('CAPACITY_EXCEEDED','The main load does not fit your van.',409);
   const mainStops=stops(main);const [initial]=await this.planner.plan([mainStops]);
   const trip:MatchTrip={departAt:new Date(Math.max(Date.now(),Date.parse(main.pickupFrom))).toISOString(),stops:mainStops,baseKm:initial.km,baseMinutes:initial.minutes,initialKm:initial.km,addonIds:[]};
   let currentRoute=initial;
-  for(const selected of orders.slice(1)){
+  if(context){
+   const selected=new Map(orders.map(order=>[order.id,order]));
+   trip.stops=context.route_plan.stops.filter(stop=>selected.has(stop.orderId)).map(stop=>stops(selected.get(stop.orderId)!).find(value=>value.kind===stop.kind)!);
+   trip.addonIds=orders.slice(1).filter(order=>context.route_plan.orders.some(saved=>saved.id===order.id)).map(order=>order.id);
+   [currentRoute]=await this.planner.plan([trip.stops]);trip.baseKm=currentRoute.km;trip.baseMinutes=currentRoute.minutes;
+  }
+  for(const selected of orders.slice(1).filter(order=>!trip.addonIds.includes(order.id))){
    const candidates=await this.candidates(trip,currentRoute,query.bufferKm,[mainOrderId,...trip.addonIds],selected.id);
    const result=await evaluateAddons(main,trip,vehicle,candidates.orders,this.planner,{bufferKm:query.bufferKm});
    const chosen=result.suggestions.find(item=>item.order.id===selected.id);
@@ -61,6 +64,7 @@ export class AddonMatchingService{
    [currentRoute]=await this.planner.plan([trip.stops]);trip.baseKm=currentRoute.km;trip.baseMinutes=currentRoute.minutes;
   }
   const plan=this.plan(orders,vehicle,trip,currentRoute,initial);
+  if(context)plan.tripRevision=context.revision;
   if(planOnly)return{suggestions:[],rejected:[],trip:plan,partial:false,updatedAt:new Date().toISOString()};
   const updatedAt=new Date().toISOString();
   await publish?.({suggestions:[],rejected:[],trip:plan,partial:true,updatedAt});
@@ -69,10 +73,11 @@ export class AddonMatchingService{
   return{...result,trip:plan,partial:Boolean(result.partial)||pool.total>candidateLimit,updatedAt:new Date().toISOString()};
  }
  private plan(orders:MatchOrder[],vehicle:Vehicle,trip:MatchTrip,route:PlannedRoute,mainRoute:PlannedRoute):TripPlan{
+  if(route.km-mainRoute.km>Math.min(mainRoute.km*defaultMatchOpts.maxDetourPct,defaultMatchOpts.maxDetourKm))throw new ServiceError('DETOUR','The selected loads exceed the detour limit. Remove an unconfirmed load and recalculate.',409);
   const load=capacity(trip.stops,vehicle,defaultMatchOpts.capacityFactor);
   if('reason'in load)throw new ServiceError('CAPACITY_EXCEEDED','The selected loads exceed safe capacity.',409);
   const time=timeline(trip.stops,route,trip.departAt,defaultMatchOpts);
-  if('reason'in time)throw new ServiceError(time.reason,'The route cannot meet its time windows or driving limit.',409);
+  if('reason'in time)throw new ServiceError(time.reason,time.reason==='DRIVER_HOURS'?'This route exceeds the driving limit for a single-day trip. Choose a shorter route.':'The planned arrival misses a pickup or delivery window. Choose another load or departure date.',409);
   return{orders,inputFingerprint:matchFingerprint(orders,vehicle),stops:trip.stops,timings:time.timings,departAt:trip.departAt,endAt:new Date(time.endTime).toISOString(),totalKm:route.km,detourKm:Math.max(0,route.km-mainRoute.km),totalMinutes:route.minutes,totalRevenue:orders.reduce((sum,order)=>sum+(order.priceEur??0),0),...load,geometry:route.geometry??[],mainGeometry:mainRoute.geometry??[]};
  }
  private async candidates(trip:MatchTrip,route:PlannedRoute,bufferKm:number,exclude:string[],onlyId?:string):Promise<{orders:MatchOrder[];total:number}>{

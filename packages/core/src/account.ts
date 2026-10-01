@@ -72,9 +72,12 @@ export const tripCreateSchema=z.object({
  addonOrderIds:z.array(z.string().uuid()).max(4).default([])
 }).strict().refine(value=>new Set(value.addonOrderIds).size===value.addonOrderIds.length,'Duplicate add-on orders');
 export type TripCreate=z.infer<typeof tripCreateSchema>;
-export type CreatedTrip={id:string;status:'planned';totalKm:number|null;totalRevenue:number;detourKm:number;startAt:string;endAt:string};
+export type CreatedTrip={id:string;status:'planned'|'booked';totalKm:number|null;totalRevenue:number;detourKm:number;startAt:string;endAt:string};
 export const tripOrderStatusSchema=z.object({status:z.enum(['booked','dropped'])}).strict();
 export type TripOrderItem={tripOrderId:string;orderId:string;role:'main'|'addon';status:'pending'|'booked'|'dropped'|'lost';pickupAddress:string;deliveryAddress:string;pickupFrom:string;deliveryTo:string;priceEur:number|null;weightKg:number|null;volumeM3:number|null;transEuUrl:string};
-export type TripDetail={id:string;status:'planned'|'booked'|'done'|'cancelled';totalKm:number|null;totalRevenue:number;detourKm:number;startAt:string;endAt:string;vehicleName:string;routePlan?:TripPlan|null;orders:TripOrderItem[]};
+export type TripDetail={id:string;vehicleId:string;revision:number;status:'planned'|'booked'|'done'|'cancelled';totalKm:number|null;totalRevenue:number;detourKm:number;startAt:string;endAt:string;vehicleName:string;routePlan?:TripPlan|null;orders:TripOrderItem[]};
 export const tripListQuerySchema=z.object({status:z.enum(['planned','booked','done','cancelled']).optional()});
 export type TripListItem={id:string;status:TripDetail['status'];pickupAddress:string;deliveryAddress:string;totalKm:number|null;totalRevenue:number;startAt:string;endAt:string;orderCount:number};
+
+export const tripEditSchema=z.object({addonOrderIds:z.array(z.string().uuid()).max(4),revision:z.number().int().nonnegative()}).strict().refine(value=>new Set(value.addonOrderIds).size===value.addonOrderIds.length,'Duplicate add-on orders');
+export type MyOrder={tripId:string;tripStatus:TripDetail['status'];orderId:string;role:'main'|'addon';status:TripOrderItem['status'];pickupAddress:string;deliveryAddress:string;pickupFrom:string;deliveryTo:string;priceEur:number|null;weightKg:number|null;volumeM3:number|null};

@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import type {Pool} from 'pg';
 import type {AddonQuery,AddonResult} from '@loadlink/core';
-import {ServiceError,VehicleService,readMatchOrders,matchFingerprint, type AddonMatchingService} from '@loadlink/services';
+import {ServiceError,VehicleService,readPlanningOrders,readTripContext,matchFingerprint, type AddonMatchingService} from '@loadlink/services';
 
 export type AddonJob={userId:string;mainOrderId:string;query:AddonQuery};
 export interface AddonDispatcher{get(data:AddonJob,options?:{fresh?:boolean}):Promise<AddonResult>;}
@@ -13,18 +13,13 @@ export class DirectAddonDispatcher implements AddonDispatcher {
  private running=new Set<Promise<AddonResult>>();
  constructor(private pool:Pool,private matcher:Pick<AddonMatchingService,'match'>){}
  async get(data:AddonJob,request:{fresh?:boolean}={}):Promise<AddonResult>{
-  if(data.query.tripId){
-   const trip=await this.pool.query('SELECT id FROM trips WHERE id=$1 AND user_id=$2 AND main_order_id=$3 AND vehicle_id=$4',[data.query.tripId,data.userId,data.mainOrderId,data.query.vehicleId]);
-   if(!trip.rows[0])throw new ServiceError('TRIP_NOT_FOUND','Trip not found.',404);
-   if(!data.query.addonOrderIds.length){
-    const selected=await this.pool.query<{order_id:string}>("SELECT order_id FROM trip_orders WHERE trip_id=$1 AND role='addon' AND status NOT IN('dropped','lost') ORDER BY seq",[data.query.tripId]);
-    data={...data,query:{...data.query,addonOrderIds:selected.rows.map(row=>row.order_id)}};
-   }
-  }
+  const context=data.query.tripId?await readTripContext(this.pool,data.userId,data.query.tripId):undefined;
+  if(context&&(context.main_order_id!==data.mainOrderId||context.vehicle_id!==data.query.vehicleId))throw new ServiceError('TRIP_NOT_FOUND','Trip not found.',404);
   const vehicle=await new VehicleService(this.pool).getOwned(data.userId,data.query.vehicleId);
-  const orders=await readMatchOrders(this.pool,[data.mainOrderId,...data.query.addonOrderIds]);
-  const hash=createHash('sha256').update(JSON.stringify({userId:data.userId,main:data.mainOrderId,query:data.query,input:matchFingerprint(orders,vehicle)})).digest('hex');
-
+  const orders=await readPlanningOrders(this.pool,[data.mainOrderId,...data.query.addonOrderIds],context);
+  const {refresh,...query}=data.query;
+  const hash=createHash('sha256').update(JSON.stringify({userId:data.userId,main:data.mainOrderId,query,revision:context?.revision,input:matchFingerprint(orders,vehicle)})).digest('hex');
+  if(refresh==='true'&&this.entries.get(hash)?.result)this.entries.delete(hash);
   for(const [key,entry] of this.entries)if(entry.expires<Date.now())this.entries.delete(key);
   let entry=request.fresh?undefined:this.entries.get(hash);
   if(!entry){

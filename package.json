@@ -14,7 +14,8 @@
     "mail:latest": "tsx infra/latest-mail.ts",
     "start": "npm run migrate && NODE_ENV=production tsx apps/api/src/main.ts",
     "build:web": "npm run build --workspace=@loadlink/web",
-    "dev": "tsx --env-file-if-exists=.env.local apps/api/src/main.ts"
+    "dev": "tsx --env-file-if-exists=.env.local apps/api/src/main.ts",
+    "predev": "npm run predev --workspace=@loadlink/web"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

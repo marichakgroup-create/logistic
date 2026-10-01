@@ -2,6 +2,15 @@
 
 Format: `[ ] ID — task` followed by acceptance criteria (AC).
 
+## Current milestone — Client workflow (approved 2026-10-01)
+- [ ] C1 Orders entry: all locations by default, Available / My orders, retained filters, honest capacity labels and readable errors.
+- [ ] C2 Continue a saved trip: Find add-ons opens its saved selection, recalculates and updates the same trip; booked loads retained, ownership and concurrent edits checked.
+- [ ] C3 Show arrival/deadline/slack and confirmed vs proposed revenue; complete trips explicitly, never by elapsed planned time.
+- [ ] C4 Private own-order entry, geographic pickup radius and date range, vehicle availability / approach leg.
+- [ ] C5 In-progress rerouting from current position and remaining stops; real feed and production acceptance.
+
+First implementation increment: C1–C3. Own-order location entry and in-progress routing follow in C4–C5; no approximate coordinates or unverified live-feed support.
+
 ## M0 — Foundation (week 1)
 - [ ] M0.1 Single Railway application + local Docker Compose (app, postgres+postgis), per user simplification 2026-10-01. AC: `docker compose up` starts all; healthchecks green.
 - [x] M0.2 Migrations from `04-data-model.md`. AC: fresh DB migrates; indexes exist.

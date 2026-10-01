@@ -39,6 +39,7 @@ describe('matching pipeline',()=>{
   const rejected=await evaluateAddons(main,trip(),vehicle,[order('over')],planner(stops=>route(stops,{km:116})),{timeBuffer:0});
   expect(accepted.suggestions[0].detourKm).toBe(15);expect(rejected.rejected[0].reason).toBe('DETOUR');
  });
+ it('offers more than four alternatives while choosing loads',async()=>{const result=await evaluateAddons(main,trip(),vehicle,Array.from({length:7},(_,i)=>order(String(i))),planner(route),{timeBuffer:0});expect(result.suggestions).toHaveLength(7);});
  it('enforces the four add-on cap',async()=>{const result=await evaluateAddons(main,trip({addonIds:['1','2','3','4']}),vehicle,[order()],planner(route));expect(result.suggestions).toHaveLength(0);});
  it('enforces the nine-hour buffered driving limit',async()=>{const result=await evaluateAddons(main,trip(),vehicle,[order()],planner(stops=>route(stops,{minutes:541,legsMinutes:[541]})),{timeBuffer:0});expect(result.rejected[0].reason).toBe('DRIVER_HOURS');});
  it('scores revenue minus detour cost and sorts descending',async()=>{const low=order('low',{priceEur:100});const high=order('high',{priceEur:250});const result=await evaluateAddons(main,trip(),vehicle,[low,high],planner(route),{timeBuffer:0,costPerKm:.5});expect(result.suggestions.map(item=>item.order.id)).toEqual(['high','low']);expect(result.suggestions[0].score).toBe(245);});

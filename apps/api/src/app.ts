@@ -5,7 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import type { Pool } from 'pg';
 import { z, ZodError } from 'zod';
-import { addonQuerySchema, magicLinkRequestSchema, tripCreateSchema, tripListQuerySchema, tripOrderStatusSchema, type SessionUser } from '@loadlink/core';
+import { addonQuerySchema, magicLinkRequestSchema, tripCreateSchema, tripEditSchema, tripListQuerySchema, tripOrderStatusSchema, type SessionUser } from '@loadlink/core';
 import { AuthService, VehicleService, OrderService, ServiceError, enforceRequestLimit,
   SESSION_SECONDS, TripService, type EmailSender } from '@loadlink/services';
 import {GoogleAuth} from './google-auth';
@@ -104,6 +104,7 @@ export async function createApp(pool: Pool, sender: EmailSender, config: AppConf
       sameOrigin(request); return { vehicle: await vehicles.upsert((await user(request)).id, body) };
     }
     @Get('orders') async search(@Query() query: unknown, @Req() request: Request) { return orders.search((await user(request)).id, query); }
+    @Get('my-orders') async myOrders(@Req() request:Request){return{orders:await trips.myOrders((await user(request)).id)};}
     @Get('orders/:id') async detail(@Param('id') id: string, @Query('vehicleId') vehicleId: string, @Req() request: Request) {
       return { order: await orders.detail((await user(request)).id, id, vehicleId) };
     }
@@ -131,8 +132,19 @@ export async function createApp(pool: Pool, sender: EmailSender, config: AppConf
       sameOrigin(request);z.string().uuid().parse(id);const input=tripOrderStatusSchema.parse(body);
       return{trip:await trips.mark((await user(request)).id,id,input.status)};
     }
-    @Patch('trips/:id') async cancelTrip(@Param('id') id:string,@Req() request:Request){
-      sameOrigin(request);z.string().uuid().parse(id);return trips.cancel((await user(request)).id,id);
+    @Put('trips/:id') async updateTrip(@Param('id') id:string,@Body() body:unknown,@Req() request:Request){
+      if(!addons)throw new ServiceError('MATCH_UNAVAILABLE','Route matching is temporarily unavailable.',503);
+      sameOrigin(request);z.string().uuid().parse(id);const current=await user(request);const input=tripEditSchema.parse(body);
+      const trip=await trips.detail(current.id,id);
+      const main=trip.orders.find(order=>order.role==='main');
+      if(!main)throw new ServiceError('TRIP_NOT_FOUND','Trip not found.',404);
+      const matches=await addons.get({userId:current.id,mainOrderId:main.orderId,query:{vehicleId:trip.vehicleId,tripId:id,bufferKm:25,addonOrderIds:input.addonOrderIds}},{fresh:true});
+      return{trip:await trips.update(current.id,id,input,matches.trip)};
+    }
+    @Patch('trips/:id') async updateStatus(@Param('id') id:string,@Body() body:unknown,@Req() request:Request){
+      sameOrigin(request);z.string().uuid().parse(id);const current=await user(request);
+      const input=z.object({action:z.enum(['cancel','complete']).default('cancel')}).strict().parse(body??{});
+      return input.action==='complete'?{trip:await trips.complete(current.id,id)}:trips.cancel(current.id,id);
     }
   }
   @Module({ controllers: [ApiController] }) class AppModule {}

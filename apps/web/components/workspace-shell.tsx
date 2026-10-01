@@ -8,7 +8,7 @@ import {Navigation} from './navigation';
 export function WorkspaceShell({email,children}:{email:string;children:React.ReactNode}){
  const [collapsed,setCollapsed]=useState(false);
  const pathname=usePathname();
- const area=pathname.startsWith('/trips')?'Trips':pathname.startsWith('/account')?'Account':'Find';
+ const area=pathname.startsWith('/trips')?'Trips':pathname.startsWith('/account')?'Account':'Orders';
  const detail=pathname.startsWith('/find/')?'Build trip':pathname.startsWith('/trips/')?'Trip details':null;
  return <div className={'app-frame'+(collapsed?' sidebar-collapsed':'')}>
   <a className="skip-link" href="#workspace-content">Skip to content</a>

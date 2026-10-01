@@ -12,3 +12,4 @@ files.zip
 .env.local
 
 .env.*.local
+apps/web/public/maplibre/

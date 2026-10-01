@@ -75,3 +75,24 @@ and Next pages in one Node process on one port. Direct matching uses a bounded d
 Postgres remains the durable store. A non-overlapping timer replaces BullMQ periodic imports.
 Keep existing PostGIS and Google OAuth data. Use Google Routes directly without a routing container.
 No destructive database migration. One Railway replica; scale-out scheduling is outside this pilot.
+
+## 2026-10-01 — Approved client workflow, first increment
+Orders replaces the Find label while retaining /find URLs. My orders lists saved trip loads.
+Trip editing is allowed before departure for planned/booked trips, preserves confirmed loads and stop sequence,
+uses immutable confirmed cargo snapshots and optimistic revision checks. In-progress rerouting needs current
+position and is a later increment. Completion is explicit; booked is confirmation, not departure.
+The initial increment implements C1–C3; own-order geocoding, radius filters and approach legs remain C4.
+
+### C1–C3 validation (2026-10-01)
+- Typecheck, lint and production build passed; 62 unit tests passed.
+- Migration 0005 applied successfully to local Postgres.
+- Local API test for marichakgroup@gmail.com verified creating a trip, updating the same ID, rejecting an old revision, retaining a confirmed main load, and explicit completion.
+- Orders, My orders, trip detail and edit screens inspected at 390px. Pickup/delivery windows and slack are visible.
+- MapLibre v6 worker initially failed under Next.js. The worker and its shared module are copied to public assets before dev/build and MapLibre uses the same-origin worker URL. Local browser verification then showed the map without a worker error. Fixture routing still has no road geometry.
+- This increment has not been deployed. Own-order entry, radius/date-range search and adding loads after departure remain subsequent milestones.
+
+### Google integration check (2026-10-01)
+- Production health at logistic-production-96ef.up.railway.app returned HTTP 200.
+- The live Google sign-in redirect sends exactly https://logistic-production-96ef.up.railway.app/v1/auth/google/callback.
+- The Google Routes API key is read by the server from GOOGLE_ROUTES_KEY. The MapLibre background uses OpenStreetMap raster tiles, not that key.
+- Restrict the Routes key to Routes API only. The Google OAuth client and its redirect URI are configured separately from API keys.
