@@ -96,3 +96,9 @@ The initial increment implements C1–C3; own-order geocoding, radius filters an
 - The live Google sign-in redirect sends exactly https://logistic-production-96ef.up.railway.app/v1/auth/google/callback.
 - The Google Routes API key is read by the server from GOOGLE_ROUTES_KEY. The MapLibre background uses OpenStreetMap raster tiles, not that key.
 - Restrict the Routes key to Routes API only. The Google OAuth client and its redirect URI are configured separately from API keys.
+
+### Builder layout refinement (2026-10-01)
+- Put the main route, pickup/delivery deadlines and cargo in the compact header; keep the main order price secondary.
+- Show server-ranked available add-ons as visible cards with detour, extra time, peak payload and Add action. Selection still recomputes the route and remaining options.
+- Replace separate collapsed route/rejection details with two adjacent controls and one full-width content panel. Route stops open by default; the timeline keeps numbered markers and a dotted connector.
+- OSM tiles were blocked because the app sent Referrer-Policy: no-referrer. Web pages now use strict-origin-when-cross-origin; /v1 API responses and the OAuth callback retain no-referrer. OSM's tile policy explicitly requires a valid browser Referer.

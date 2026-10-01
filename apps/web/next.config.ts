@@ -3,7 +3,7 @@ const config: NextConfig = {
   transpilePackages: ['@loadlink/core'],
   async headers() {
     return [{ source: '/:path*', headers: [
-      { key: 'Referrer-Policy', value: 'no-referrer' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'X-Content-Type-Options', value: 'nosniff' },
       { key: 'X-Frame-Options', value: 'DENY' },
     ] }];

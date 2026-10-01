@@ -151,9 +151,9 @@ export async function createApp(pool: Pool, sender: EmailSender, config: AppConf
   const app = await NestFactory.create(AppModule, { logger: ['error', 'warn', 'log'] });
   app.getHttpAdapter().getInstance().disable('x-powered-by');
   app.useGlobalFilters(new ErrorFilter());
-  app.use((_request: Request, response: Response, next: () => void) => {
+  app.use((request: Request, response: Response, next: () => void) => {
     response.setHeader('Cache-Control', 'no-store'); response.setHeader('X-Content-Type-Options', 'nosniff');
-    response.setHeader('Referrer-Policy', 'no-referrer'); next();
+    response.setHeader('Referrer-Policy', request.path.startsWith('/v1/') ? 'no-referrer' : 'strict-origin-when-cross-origin'); next();
   });
   return app;
 }
