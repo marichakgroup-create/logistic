@@ -26,7 +26,7 @@ The Redis service must be named `Redis`; otherwise update its reference in `.rai
 
 | Service | Build | Start | Extra |
 | --- | --- | --- | --- |
-| logistic | Railpack: npm run build:web | npm start | API_URL automatically references private API; /login healthcheck |
+| logistic | Railpack: npm run build:web | npm start | API_URL references private API; /v1/health validates Web → API → DB |
 | api | infra/Dockerfile.backend | npm run start:api | Port 3001, IPv6 private networking, /v1/health, migrations |
 | worker | infra/Dockerfile.backend | npm run start:worker | Redis, cached road routing, fixture orders until feed contract exists |
 
@@ -40,7 +40,9 @@ Production sign-in uses Google OAuth. Email sending is disabled, including lost-
 
 ## Diagnosis
 
-- Web online + Find 500: check API deployment and API_URL; a /login healthcheck validates only Web.
+- Web online + Find 500: check API deployment and API_URL. The `/v1/health` healthcheck must return 200 through Web and the private API, including a DB query.
+- Repeated `/v1/auth/me` or `/v1/vehicles` requests from `node`, followed by timeouts: API_URL may point to Web itself. Use `http://${{api.RAILWAY_PRIVATE_DOMAIN}}:3001`, then **rebuild** Web because rewrites are recorded during the Next.js build. Merely restarting the old image is insufficient.
+- Production builds require API_URL and reject a destination matching APP_URL or RAILWAY_PUBLIC_DOMAIN. Keep API_URL as an origin without `/v1` or credentials.
 - API pre-deploy failure: inspect migration logs, Neon permissions and PostGIS availability.
 - Email cannot send: inspect Resend key, verified sender and APP_URL.
 - No matches: confirm Worker is online, Redis reference resolves and routing is reachable.
