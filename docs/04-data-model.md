@@ -60,7 +60,8 @@ CREATE TABLE trips (
   status text NOT NULL DEFAULT 'planned',       -- planned|booked|done|cancelled
   total_km int, total_revenue numeric(9,2), detour_km int,
   start_at timestamptz, end_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now(),
+  route_plan jsonb                           -- nullable saved server route snapshot (migration 0003)
 );
 
 CREATE TABLE trip_orders (

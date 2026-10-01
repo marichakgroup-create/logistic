@@ -35,3 +35,19 @@
 - Restrained same-hue gradients may add depth to functional focal surfaces. Native select, date and form behavior stays intact beneath branded controls so touch and keyboard interaction remain predictable.
 - Do not create custom illustrative SVG artwork. User-provided or generated assets are the only product imagery; universal control icons remain allowed.
 - `FixtureRouting` is deterministic local-development infrastructure only. Production continues to require OSRM with Google Routes fallback and never substitutes estimated straight-line routing.
+
+## 2026-09-30 — Operational UI refinement
+- Preserve the approved LoadLink workspace (white canvas, navy, signal yellow, Manrope) and the three-item navigation. This user-requested design refinement follows existing M1–M3 UI scope.
+- Use one shared 8/16/24/32 spacing rhythm, full-width sidebar rows, horizontal local navigation and progressively disclosed dimensions. Remove decorative workflow steps and repeated navigation help.
+- Use native auto popovers for custom sorting and calendar controls (Escape/outside dismissal); CSS anchors place them next to their triggers where supported, with a centered fallback. City suggestions use a keyboard-operable combobox.
+- Keep pickup/delivery windows visible on freight cards and delivery deadlines on saved loads. Unknown volume/distance is explicitly labeled.
+
+## 2026-10-01 — M2 selection recalculation and deferred testing
+- The user explicitly requested implementation now and comprehensive tests only on their later instruction. No test runs or new tests were performed for this increment; acceptance remains pending. TypeScript compilation is retained as a minimal implementation check.
+- `addonOrderIds` is an ordered draft selection (up to four unique UUIDs). Every add/remove reconstructs the route greedily from the main load, queries the current route corridor, and reranks remaining candidates. The cumulative detour limit is relative to the original main route.
+- Choose the shortest insertion that satisfies capacity and time feasibility, rather than rejecting an order after checking only the shortest geometric insertion. A trip lasting over 24 hours is outside the MVP.
+- Capacity metrics are peak onboard kg/m³ per route leg. Unknown volume is retained as null. Timeline returns arrival/departure times and onboard cargo after every stop.
+- Save requests bypass the suggestion cache and calculate the complete selected route. Order and vehicle fingerprints are compared under database share locks before the transaction commits. Cached suggestions alone are no longer accepted as proof that a whole trip is feasible.
+- Persist the server route snapshot in nullable `trips.route_plan` (migration 0003); existing trips retain their previous detail view. New trip distance/end time come from the route calculation, not the sum of individual detours or the last delivery-window deadline.
+- MapLibre is lazy-loaded; configurable raster tiles use `NEXT_PUBLIC_MAP_TILE_URL`. OSRM/Google polylines supply road geometry. Development fixture routing supplies no road geometry: show numbered stops with an explicit missing-road-line label, never invent a road route. Fixture routing is rejected in production.
+- M2 candidate routing is capped at 100 orders. The existing 10k/p95 benchmark, new selection/save regression cases, map/browser acceptance and updates to legacy TripService test fixtures are reserved for the deferred test phase.

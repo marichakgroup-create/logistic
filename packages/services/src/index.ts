@@ -9,3 +9,4 @@ export * from './orders';
 export * from './addons';
 export * from './trips';
 export * from './notifications';
+export * from './matching-data';

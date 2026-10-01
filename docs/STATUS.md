@@ -34,8 +34,16 @@ Pending acceptance:
 - M0.1 remains open because Docker is not installed; Compose startup and container healthchecks have not been executed.
 - OSRM needs `infra/osrm/region.osm.pbf`. Cache/fallback orchestration is tested, but a live OSRM route has not been exercised.
 - M2.2 still needs its 10,000-open-order p95 benchmark before its roadmap acceptance criterion is complete.
-- M2.3 still needs the lazy route map, show-all control and re-ranking after each selected add-on before its full acceptance criterion is complete.
+- M2.3 route map, rejected-order control and selection recalculation are now implemented; full acceptance and regression coverage are deliberately deferred at the user’s request.
 - The intermediary order-feed contract and credentials will be supplied after the first deployment. Fixtures remain the active source.
 - Production email needs a verified sender and Resend key. Development mail uses the local outbox.
 
-M0.2–M0.5, M1, M2.1, M2.4 and M3.1–M3.3 are complete. M0.1 is environment-blocked. M2.2 is implemented and awaiting its 10k p95 benchmark. M2.3 is partially implemented. M3.4 is next.
+M0.2–M0.5, M1, M2.1, M2.4 and M3.1–M3.3 are complete. M0.1 is environment-blocked. M2.2 is implemented and awaiting its 10k p95 benchmark. M2.3 implementation has been extended; its acceptance remains pending. M3.4 is the next implementation stage after this M2 work.
+
+## Implementation increment — 2026-10-01 — selection recalculation
+- Added ordered draft selections, rebuilding after removals, current-route geospatial filtering and refreshed add-on ranking.
+- Added whole-trip peak capacity/timeline metrics, feasible insertion selection and cumulative detour enforcement.
+- Saving uses a fresh whole-trip plan and transactional order/vehicle fingerprint checks. Migration 0003 persists the route snapshot and has been applied to the local development database.
+- Added lazy MapLibre with numbered stops, rejected-order reasons, selected-load rows, route stop details and pending/error states that disable saving until the selection is calculated.
+- Local API and worker processes were restarted with their existing settings.
+- TypeScript compilation passes. No unit, integration, browser or performance tests were run for this increment, following the user’s instruction. The earlier 43-test result applies to the previous version, not these changes. Existing TripService test fixtures still use the old suggestion-list contract and must be adapted in the deferred test phase.

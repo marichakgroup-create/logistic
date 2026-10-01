@@ -35,7 +35,7 @@ Implementations: `TransEuFeedSource` (reads our existing system DB/API), `Fixtur
 | GET/PUT | /vehicles | list / upsert (MVP: one default) |
 | GET | /orders | `from,to,date,vehicleId,cursor` → cards; hides orders not fitting vehicle |
 | GET | /orders/:id | detail |
-| GET | /orders/:id/addons | `vehicleId,bufferKm,tripId?` → `{suggestions[], rejected[], partial, updatedAt}` |
+| GET | /orders/:id/addons | `vehicleId,bufferKm,tripId?,addonOrderIds?` → `{suggestions[], rejected[], trip?, partial, updatedAt}` |
 | POST | /trips | `{vehicleId, mainOrderId, addonOrderIds[]}` → re-validates server-side |
 | GET | /trips | `status?` |
 | GET | /trips/:id | with stops timeline + metrics |
@@ -54,3 +54,8 @@ TRANSEU_FEED_URL, TRANSEU_FEED_TOKEN, STRIPE_SECRET, STRIPE_WEBHOOK_SECRET, STRI
 Docker Compose for dev/prod-lite (web, api, worker, postgres, redis, osrm). Healthchecks, structured JSON logs,
 Sentry. Audit log for every sync batch (counts in/updated/closed). Rate limit: 60 req/min/user, 5 magic links/hour/email.
 Data access: users can only read their own vehicles/trips; orders are shared read-only.
+
+### M2 draft route contract
+`addonOrderIds` is a comma-separated, ordered selection of up to four unique IDs in GET queries. `trip` is the server-calculated snapshot of selected orders, stop order, timeline, peak load, total km, detour, revenue and road geometry. No `trip` in a partial timeout response means the draft is still unavailable for saving.
+
+`POST /trips` requests a fresh plan-only worker job and compares its input fingerprint against locked current order/vehicle rows. Route snapshots are stored in `trips.route_plan`. Map raster tiles are configurable with `NEXT_PUBLIC_MAP_TILE_URL`; the browser never calls a routing provider.

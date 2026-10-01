@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type {TripPlan} from './matching';
 
 export const emailSchema = z.string().trim().toLowerCase().email().max(254);
 export const magicLinkRequestSchema = z.object({ email: emailSchema }).strict();
@@ -74,6 +75,6 @@ export type TripCreate=z.infer<typeof tripCreateSchema>;
 export type CreatedTrip={id:string;status:'planned';totalKm:number|null;totalRevenue:number;detourKm:number;startAt:string;endAt:string};
 export const tripOrderStatusSchema=z.object({status:z.enum(['booked','dropped'])}).strict();
 export type TripOrderItem={tripOrderId:string;orderId:string;role:'main'|'addon';status:'pending'|'booked'|'dropped'|'lost';pickupAddress:string;deliveryAddress:string;pickupFrom:string;deliveryTo:string;priceEur:number|null;weightKg:number|null;volumeM3:number|null;transEuUrl:string};
-export type TripDetail={id:string;status:'planned'|'booked'|'done'|'cancelled';totalKm:number|null;totalRevenue:number;detourKm:number;startAt:string;endAt:string;vehicleName:string;orders:TripOrderItem[]};
+export type TripDetail={id:string;status:'planned'|'booked'|'done'|'cancelled';totalKm:number|null;totalRevenue:number;detourKm:number;startAt:string;endAt:string;vehicleName:string;routePlan?:TripPlan|null;orders:TripOrderItem[]};
 export const tripListQuerySchema=z.object({status:z.enum(['planned','booked','done','cancelled']).optional()});
 export type TripListItem={id:string;status:TripDetail['status'];pickupAddress:string;deliveryAddress:string;totalKm:number|null;totalRevenue:number;startAt:string;endAt:string;orderCount:number};

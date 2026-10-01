@@ -11,13 +11,13 @@ function fromRow(row: VehicleRow): Vehicle {
     lengthCm: row.length_cm, widthCm: row.width_cm, heightCm: row.height_cm, isDefault: row.is_default };
 }
 export class VehicleService {
-  constructor(private pool: Pool) {}
+  constructor(private pool: Pick<Pool,'query'>) {}
   async list(userId: string): Promise<Vehicle[]> {
     const result = await this.pool.query<VehicleRow>('SELECT * FROM vehicles WHERE user_id=$1 AND is_default', [userId]);
     return result.rows.map(fromRow);
   }
-  async getOwned(userId: string, vehicleId: string): Promise<Vehicle> {
-    const result = await this.pool.query<VehicleRow>('SELECT * FROM vehicles WHERE id=$1 AND user_id=$2', [vehicleId, userId]);
+  async getOwned(userId: string, vehicleId: string, lock=false): Promise<Vehicle> {
+    const result = await this.pool.query<VehicleRow>(`SELECT * FROM vehicles WHERE id=$1 AND user_id=$2 ${lock?'FOR SHARE':''}`, [vehicleId, userId]);
     if (!result.rows[0]) throw new ServiceError('VEHICLE_NOT_FOUND', 'Vehicle not found.', 404);
     return fromRow(result.rows[0]);
   }

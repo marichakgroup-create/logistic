@@ -14,7 +14,7 @@ export function VehicleForm({ initial, onboarding=false }: { initial?:Vehicle; o
   const [error,setError] = useState('');
   const [saved,setSaved] = useState(false);
   const [busy,setBusy] = useState(false);
-  const [dimensions,setDimensions] = useState(!onboarding);
+  const [dimensions,setDimensions] = useState(false);
   function set<K extends keyof VehicleInput>(key:K, next:VehicleInput[K]) { setValue(v => ({ ...v,[key]:next })); setSaved(false); }
   async function submit(event:FormEvent) {
     event.preventDefault(); setError(''); setSaved(false);

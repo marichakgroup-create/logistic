@@ -12,3 +12,10 @@ This direction supersedes the oversized hero surfaces and nested content sheets 
 - UI UX Pro Max was read and its design-system search run for “logistics SaaS minimal workspace”. The Minimalism & Swiss Style match fits this operational product. Its landing-page pattern and blue/orange palette were excluded because they do not match the authenticated workspace or the user's existing brand.
 
 Reference: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+
+## Operational refinement — 2026-09-30
+Shared rhythm: 8 / 16 / 24 / 32 px; controls at least 44 px tall; body and data text use navy or contrast-safe slate on white. Desktop navigation rows fill the sidebar. Trips status and Account anchors sit above their content. Interior dimensions are secondary and collapsed initially.
+
+Sorting, pickup calendar and city suggestions now use LoadLink styling with keyboard support. Pickup and delivery windows are visible on route cards; saved loads show pickup time, delivery deadline and known capacity values.
+
+Validation: strict typecheck, lint, 43 unit tests and production web build pass. Find, Trips, Account, Builder and Trip Detail were visually reviewed; calendar, sorting, city keyboard selection and sidebar collapse were exercised. Browser error/warning log was empty. Mobile review had no horizontal overflow; this browser still reports 520 CSS px after requesting 390, so exact 390 px remains unverified.

@@ -96,8 +96,8 @@ export async function createApp(pool: Pool, sender: EmailSender, config: AppConf
     @Post('trips') async createTrip(@Body() body: unknown,@Req() request:Request){
       if(!addons)throw new ServiceError('MATCH_UNAVAILABLE','Route matching is temporarily unavailable.',503);
       sameOrigin(request);const current=await user(request);const input=tripCreateSchema.parse(body);
-      const matches=await addons.get({userId:current.id,mainOrderId:input.mainOrderId,query:{vehicleId:input.vehicleId,bufferKm:25}});
-      return{trip:await trips.create(current.id,input,matches.suggestions)};
+      const matches=await addons.get({userId:current.id,mainOrderId:input.mainOrderId,query:{vehicleId:input.vehicleId,bufferKm:25,addonOrderIds:input.addonOrderIds}},{fresh:true});
+      return{trip:await trips.create(current.id,input,matches.trip)};
     }
     @Get('trips') async tripList(@Query() query:unknown,@Req() request:Request){
       const input=tripListQuerySchema.parse(query);return{trips:await trips.list((await user(request)).id,input.status)};

@@ -17,7 +17,7 @@ const sender = provider === 'local'
   : new ResendEmailSender(process.env.EMAIL_API_KEY!, process.env.EMAIL_FROM!);
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const redis=new URL(process.env.REDIS_URL??'redis://localhost:6379');
-const addons=new BullAddonDispatcher({host:redis.hostname,port:Number(redis.port||6379),password:redis.password||undefined});
+const addons=new BullAddonDispatcher({host:redis.hostname,port:Number(redis.port||6379),password:redis.password||undefined},pool);
 const app = await createApp(pool, sender, { appUrl, sessionSecret: secret, production },addons);
 app.enableShutdownHooks();
 for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, async () => { await app.close(); await addons.close(); await pool.end(); process.exit(0); });

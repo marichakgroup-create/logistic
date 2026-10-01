@@ -1,0 +1,8 @@
+import type {TripPlan} from '@loadlink/core';
+import {number} from '../lib/format';
+export function RouteStops({plan,saved=false}:{plan:TripPlan;saved?:boolean}){
+ return <details className="planned-stops"><summary>{saved?'Saved route stops':'Route stops'} · {plan.stops.length}</summary><ol>{plan.stops.map((stop,index)=>{
+  const order=plan.orders.find(order=>order.id===stop.orderId);const timing=plan.timings[index];
+  return <li key={stop.orderId+'-'+stop.kind}><span>{index+1}</span><div><strong>{stop.kind==='pickup'?'Pickup':'Delivery'} · {stop.kind==='pickup'?order?.pickupAddress:order?.deliveryAddress}</strong><p>{timing?new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(timing.arrivalAt)):'Time pending'} · {timing?number(timing.onboardKg)+' kg on board':'Load pending'}{timing?.onboardM3===null?' · Volume unknown':timing?' · '+number(timing.onboardM3)+' m³ on board':''}</p></div></li>;
+ })}</ol></details>;
+}
