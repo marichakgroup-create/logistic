@@ -19,7 +19,7 @@ export default defineRailway(ctx => {
   deploy:{restartPolicyType:'ON_FAILURE',restartPolicyMaxRetries:5},
  });
  const web=service('logistic',{
-  source,build:{builder:'RAILPACK',buildCommand:'npm run build:web'},start:'npm start',healthcheck:'/login',
+  source,build:{builder:'RAILPACK',buildCommand:'npm run build:web'},start:'npm start',healthcheck:'/v1/health',healthcheckTimeout:120,
   env:{NODE_ENV:'production',API_URL:'http://${{api.RAILWAY_PRIVATE_DOMAIN}}:3001'},
  });
  return project(ctx.projectName??'courteous-connection',{resources:[web,api,worker]});

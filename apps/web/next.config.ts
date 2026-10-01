@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next';
+import { apiOrigin } from './lib/api-origin';
 const config: NextConfig = {
   transpilePackages: ['@loadlink/core'],
   async rewrites() {
-    return [{ source: '/v1/:path*', destination: `${process.env.API_URL ?? 'http://127.0.0.1:3001'}/v1/:path*` }];
+    return [{ source: '/v1/:path*', destination: `${apiOrigin()}/v1/:path*` }];
   },
   async headers() {
     return [{ source: '/:path*', headers: [
