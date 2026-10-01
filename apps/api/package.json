@@ -8,15 +8,16 @@
     "start": "tsx src/main.ts"
   },
   "dependencies": {
+    "@loadlink/core": "*",
+    "@loadlink/services": "*",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "bullmq": "^5.40.0",
+    "google-auth-library": "^11.1.0",
+    "pg": "^8.13.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0",
-    "bullmq": "^5.40.0",
-    "pg": "^8.13.0",
-    "@loadlink/services": "*",
-    "@loadlink/core": "*",
     "zod": "^3.24.0"
   },
   "devDependencies": {

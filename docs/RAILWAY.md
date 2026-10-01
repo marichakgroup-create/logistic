@@ -11,8 +11,8 @@ One repository, three app services: `logistic` (Web), `api`, `worker`. Neon stor
 | --- | --- |
 | DATABASE_URL | Neon production connection string with SSL (use direct/unpooled for migration session advisory locks) |
 | SESSION_SECRET | A random secret at least 32 characters long |
-| EMAIL_API_KEY | Resend API key |
-| EMAIL_FROM | Sender on a verified Resend domain |
+| GOOGLE_CLIENT_ID | Google OAuth Web application client ID |
+| GOOGLE_CLIENT_SECRET | Secret of the same OAuth client |
 | OSRM_URL | Reachable self-hosted OSRM service URL |
 | GOOGLE_ROUTES_KEY | Google Routes fallback key; empty if unused |
 
@@ -20,7 +20,7 @@ The Redis service must be named `Redis`; otherwise update its reference in `.rai
 
 3. Push the repository changes to main. Run `npm run deploy:plan`, review the changes, then `npm run deploy:apply`. Do not approve unexpected service/volume deletion. A named `loadlink` partial manages only app services, leaving existing Redis and demo outside its ownership. Inspect the first plan before applying, including variable removals on Web.
 4. API runs `npm run migrate` automatically before deployment. Start API first, then Worker, then rebuild Web with its API reference. Workers can be redeployed after API migration finishes on first installation.
-5. Visit `/find`: without a session it should redirect to `/login`; enter your email and follow the delivered link.
+5. Visit `/find`: without a session it should redirect to `/login`; choose Continue with Google.
 
 ## What the configuration supplies
 
@@ -34,7 +34,7 @@ The Redis service must be named `Redis`; otherwise update its reference in `.rai
 
 ## Missing providers
 
-Resend setup is required for production magic-link login. Local outbox is development only. Routing must have an actual OSRM service or working Google fallback; production fixture routing is forbidden. Trans.eu and Stripe keys are not required for this fixture pilot.
+Production sign-in uses Google OAuth. Email sending is disabled, including lost-order emails; in-app lost-order status remains. Resend is not required for this setup. Local outbox is development only. Routing must have an actual OSRM service or working Google fallback; production fixture routing is forbidden. Trans.eu and Stripe keys are not required for this fixture pilot.
 
 `neon deploy` does not apply LoadLink migrations or host the frontend. Never commit `.env.local`, `.neon`, or credentials. Rotate the Neon password disclosed in chat before deployment.
 
@@ -46,3 +46,13 @@ Resend setup is required for production magic-link login. Local outbox is develo
 - No matches: confirm Worker is online, Redis reference resolves and routing is reachable.
 
 IaC is applied explicitly via CLI; Git push rebuilds existing services but does not create missing infrastructure. Reference: https://docs.railway.com/infrastructure-as-code
+
+## Google sign-in setup
+
+Google Cloud → Google Auth Platform: configure branding and audience (External; add your email as a test user while in Testing). Credentials → Create OAuth client ID → Web application. Add this Authorized redirect URI exactly:
+
+`https://logistic-production-c186.up.railway.app/v1/auth/google/callback`
+
+Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Railway Shared Variables, then deploy API. Routes API keys are separate and cannot authenticate users. No Google access/refresh tokens are persisted. Google subject is unique; verified Gmail/Workspace identity can link an existing email account, third-party emails cannot silently link an existing account.
+
+Database, Redis, SESSION_SECRET and API/Worker services are still required; changing the login provider does not remove them. Apply migration 0004 before using Google sign-in.
