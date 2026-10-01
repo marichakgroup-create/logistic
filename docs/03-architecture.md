@@ -59,3 +59,5 @@ Data access: users can only read their own vehicles/trips; orders are shared rea
 `addonOrderIds` is a comma-separated, ordered selection of up to four unique IDs in GET queries. `trip` is the server-calculated snapshot of selected orders, stop order, timeline, peak load, total km, detour, revenue and road geometry. No `trip` in a partial timeout response means the draft is still unavailable for saving.
 
 `POST /trips` requests a fresh plan-only worker job and compares its input fingerprint against locked current order/vehicle rows. Route snapshots are stored in `trips.route_plan`. Map raster tiles are configurable with `NEXT_PUBLIC_MAP_TILE_URL`; the browser never calls a routing provider.
+
+Matching responses can include `pending: true` when the API wait elapsed and the worker is still running. A completed response can remain `partial: true` because of the candidate/time limit; it is not automatically retried. Builder polls only pending responses with a bounded retry count and aborts obsolete selections.

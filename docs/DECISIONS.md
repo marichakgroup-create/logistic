@@ -51,3 +51,14 @@
 - Persist the server route snapshot in nullable `trips.route_plan` (migration 0003); existing trips retain their previous detail view. New trip distance/end time come from the route calculation, not the sum of individual detours or the last delivery-window deadline.
 - MapLibre is lazy-loaded; configurable raster tiles use `NEXT_PUBLIC_MAP_TILE_URL`. OSRM/Google polylines supply road geometry. Development fixture routing supplies no road geometry: show numbered stops with an explicit missing-road-line label, never invent a road route. Fixture routing is rejected in production.
 - M2 candidate routing is capped at 100 orders. The existing 10k/p95 benchmark, new selection/save regression cases, map/browser acceptance and updates to legacy TripService test fixtures are reserved for the deferred test phase.
+
+## 2026-10-01 — Bounded matching and feed preparation
+- Continue M2.2 before live-feed pilot integration. Public trans.eu documentation does not establish the intermediary feed contract; record preparation in TRANSEU-INTEGRATION.md rather than inventing exchange discovery endpoints.
+- Evaluate candidates in revenue-prefilter order, one candidate's insertion batch at a time. Deadline is checked between complete candidates after 3.5 seconds from job execution; the first candidate may exceed the budget. Routing failure still fails the calculation instead of returning an invalid route.
+- Route legs use at most eight concurrent cached provider requests per planner call. Worker publishes only fully evaluated suggestions and a validated selected-trip snapshot to BullMQ progress. At API timeout return this snapshot if available, marked partial; otherwise retain an empty pending response.
+- A queued job's wait includes queue delay; progress can therefore still be unavailable at timeout. The 10k/p95 target and regression tests remain unverified until the user requests testing.
+
+## 2026-10-01 — Builder follows worker progress
+- `pending` distinguishes a still-running matching job from a completed but partial corridor search. Builder polls pending jobs every 1.5 seconds, at most ten responses per selection, and keeps ready suggestions usable during background calculation.
+- Stop polling completed partial results; show the incomplete-search notice instead. Abort requests and cancel scheduled polls when selection changes or the component unmounts. Clear the previous route immediately on a new selection so stale totals/map are not presented as the current draft.
+- Typecheck passed; tests and browser acceptance remain deferred by user.

@@ -17,19 +17,26 @@ export function BuilderClient({main,vehicle}:{main:OrderCard;vehicle:Vehicle}){
  const router=useRouter();const sequence=useRef(0);
  const [matches,setMatches]=useState<AddonResult|null>(null);const [added,setAdded]=useState<string[]>([]);
  const [error,setError]=useState('');const [loading,setLoading]=useState(true);const [revision,setRevision]=useState(0);
+ const [searching,setSearching]=useState(false);
  const [saving,setSaving]=useState(false);const [saved,setSaved]=useState<CreatedTrip|null>(null);
  useEffect(()=>{
   const request=++sequence.current;const controller=new AbortController();
+  let timer:ReturnType<typeof setTimeout>|undefined;let attempts=0;
+  setLoading(true);setSearching(false);setError('');setMatches(null);
   async function calculate(){
-   setLoading(true);setError('');
    try{
     const params=new URLSearchParams({vehicleId:vehicle.id,bufferKm:'25',addonOrderIds:added.join(',')});
     const next=await api<AddonResult>('/orders/'+main.id+'/addons?'+params,{signal:controller.signal});
-    if(request===sequence.current)setMatches(next);
-   }catch(error){if(!controller.signal.aborted&&request===sequence.current)setError(error instanceof Error?error.message:'Could not calculate the route.');}
-   finally{if(request===sequence.current)setLoading(false);}
+    if(controller.signal.aborted||request!==sequence.current)return;
+    setMatches(next);setLoading(false);
+    const retry=Boolean(next.pending)&&++attempts<10;
+    setSearching(retry);
+    if(retry)timer=setTimeout(()=>{void calculate();},1500);
+   }catch(error){
+    if(!controller.signal.aborted&&request===sequence.current){setError(error instanceof Error?error.message:'Could not calculate the route.');setLoading(false);setSearching(false);}
+   }
   }
-  void calculate();return()=>{controller.abort();};
+  void calculate();return()=>{controller.abort();if(timer)clearTimeout(timer);};
  },[main.id,vehicle.id,added,revision]);
  const plan=matches?.trip;
  const calculated=Boolean(plan&&plan.orders.length===added.length+1&&plan.orders.slice(1).every((order,index)=>order.id===added[index]));
@@ -51,11 +58,11 @@ export function BuilderClient({main,vehicle}:{main:OrderCard;vehicle:Vehicle}){
    {plan&&<RouteMap trip={plan} mainOrderId={main.id}/>}
    {error&&<div className="builder-error" role="alert"><p>{error}</p><button type="button" onClick={()=>setRevision(current=>current+1)} disabled={loading||saving}>Recalculate route</button></div>}
    {added.length>0&&<section className="selected-loads" aria-label="In your trip"><header><h2>In your trip</h2><span>{added.length} / 4 add-ons</span></header>{added.map(id=>{const order=plan?.orders.find(order=>order.id===id)??matches?.suggestions.find(item=>item.order.id===id)?.order;return <article className="selected-load" key={id}><div><strong>{order?.priceEur==null?'Selected load':euro(order.priceEur)}</strong><p>{order?routeName(order):'Calculating selected load…'}</p></div><button type="button" aria-label={'Remove '+(order?routeName(order):'selected load')} onClick={()=>remove(id)} disabled={saving||Boolean(saved)}><X size={18}/>Remove</button></article>;})}</section>}
-   <div className="builder-heading"><div><p className="section-label">ALONG THE WAY</p><h1>{added.length===4?'Trip is full':'Add freight that fits'}</h1><p>{loading?'Recalculating route, capacity and time windows…':matches?.updatedAt?updatedText(matches.updatedAt):'Choose loads along your route.'}</p></div><span>{added.length} / 4 added</span></div>
+   <div className="builder-heading"><div><p className="section-label">ALONG THE WAY</p><h1>{added.length===4?'Trip is full':'Add freight that fits'}</h1><p>{loading?'Recalculating route, capacity and time windows…':searching?'Checking more loads along your route…':matches?.updatedAt?updatedText(matches.updatedAt):'Choose loads along your route.'}</p></div><span>{added.length} / 4 added</span></div>
    {loading&&<div className="skeleton-list builder-skeleton" aria-label="Calculating add-ons"><i/><i/></div>}
    {!loading&&ready&&added.length<4&&matches?.suggestions.length===0&&!matches.partial&&<div className="builder-empty"><h2>No fitting add-ons right now</h2><p>You can save this route or remove a selected load to see other options.</p></div>}
    {!loading&&ready&&added.length<4&&<div className="addon-list">{matches?.suggestions.map(item=><Addon key={item.order.id} item={item} disabled={saving||Boolean(saved)} onAdd={()=>add(item)}/>)}</div>}
-   {matches?.partial&&!loading&&<div className="partial-note"><p>The search is incomplete. Recalculate to check for more loads.</p><button type="button" onClick={()=>setRevision(current=>current+1)} disabled={saving}>Check again</button></div>}
+   {matches?.partial&&!loading&&<div className="partial-note"><p role="status">{searching?'Checking more loads. You can use the ready suggestions.':'The search is incomplete. Recalculate to check for more loads.'}</p>{!searching&&<button type="button" onClick={()=>setRevision(current=>current+1)} disabled={saving}>Check again</button>}</div>}
    {!loading&&ready&&<details className="rejected-loads"><summary>Show orders that don’t fit{matches?.rejected.length?' ('+matches.rejected.length+')':''}</summary>{matches?.rejected.length?matches.rejected.map(item=><article key={item.order.id}><div><strong>{routeName(item.order)}</strong><p>{item.order.priceEur===null?'Price unknown':euro(item.order.priceEur)}</p></div><span>{reasons[item.reason]}</span></article>):<p>No rejected orders in the current route corridor.</p>}</details>}
    {plan&&<RouteStops plan={plan}/>}
    <div className="builder-footer"><div><span>{saved?'Trip saved':loading?'Recalculating…':'Total route value'}</span><strong>{revenue===null?'Unknown':euro(revenue)}</strong><small>{plan?number(plan.totalKm)+' km · '+number(plan.loadPctKg)+'% peak payload':'Route calculation pending'}</small></div>{saved?<Button onClick={()=>router.push('/trips/'+saved.id)}>View trip</Button>:<Button onClick={save} disabled={!ready||saving}>{saving?'Saving…':'Save trip'}</Button>}</div>

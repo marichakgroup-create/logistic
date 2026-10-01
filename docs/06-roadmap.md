@@ -16,7 +16,7 @@ Format: `[ ] ID — task` followed by acceptance criteria (AC).
 
 ## M2 — Matching + Builder (weeks 3–4)
 - [x] M2.1 `packages/core/matching`: steps 1–7 of `02-matching-engine.md` with all tests in §7. AC: tests green; pure (no I/O).
-- [ ] M2.2 `GET /orders/:id/addons` via match-worker, 5 min cache, `partial` flag. AC: p95 < 4 s on 10k open orders.
+- [ ] M2.2 `GET /orders/:id/addons` via match-worker, 5 min cache, `partial` flag. AC: p95 < 4 s on 10k open orders. Incremental worker progress, candidate deadline and bounded cached routing implemented 2026-10-01; performance acceptance deferred by user.
 - [ ] M2.3 Trip Builder UI (map, sticky summary, Along-the-way, add/remove, show-all toggle). AC: adding recomputes list; cap 4; load bars correct. Implementation added 2026-10-01; acceptance tests deferred by user.
 - [x] M2.4 `POST /trips` with server re-validation. AC: stale/over-capacity trip rejected with stable error code.
 

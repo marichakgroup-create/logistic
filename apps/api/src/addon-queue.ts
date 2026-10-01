@@ -27,7 +27,7 @@ export class BullAddonDispatcher implements AddonDispatcher{
   const vehicle=await new VehicleService(this.pool).getOwned(data.userId,data.query.vehicleId);
   const orders=await readMatchOrders(this.pool,[data.mainOrderId,...data.query.addonOrderIds]);
   const hash=createHash('sha256').update(JSON.stringify({userId:data.userId,main:data.mainOrderId,query:data.query,input:matchFingerprint(orders,vehicle)})).digest('hex');
-  const id=request.fresh?'save-'+randomUUID():'addons-v3-'+hash;
+  const id=request.fresh?'save-'+randomUUID():'addons-v4-'+hash;
   if(request.fresh)data={...data,planOnly:true};
   let job=await this.queue.getJob(id);
   if(job){
@@ -50,7 +50,12 @@ export class BullAddonDispatcher implements AddonDispatcher{
    throw new ServiceError('ROUTING_UNAVAILABLE','Route matching is temporarily unavailable. Please retry.',503);
   }
   if(request.fresh)throw new ServiceError('MATCH_PENDING','The trip is still being calculated. Please retry saving.',503);
-  return{suggestions:[],rejected:[],partial:true,updatedAt:null};
+  const current=await this.queue.getJob(id);
+  const progress=current?.progress;
+  if(progress&&typeof progress==='object'&&'suggestions'in progress&&'rejected'in progress&&'trip'in progress){
+   return{...(progress as AddonResult),partial:true,pending:true};
+  }
+  return{suggestions:[],rejected:[],partial:true,pending:true,updatedAt:null};
  }
  async close(){await this.events.close();await this.queue.close();}
 }

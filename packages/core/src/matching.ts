@@ -11,7 +11,8 @@ export const defaultMatchOpts:MatchOpts={bufferKm:25,maxDetourPct:.15,maxDetourK
 export type RejectReason='CAPACITY_KG'|'CAPACITY_M3'|'DIMENSIONS'|'DETOUR'|'TIME_WINDOW'|'DIRECTION'|'DRIVER_HOURS'|'MISSING_WEIGHT'|'NO_PRICE'|'TRIP_FULL';
 export type Suggestion={order:MatchOrder;addedRevenue:number;detourKm:number;detourMin:number;loadPctKg:number;loadPctM3:number|null;fit:'green'|'yellow';score:number;newEndTime:string;stops:TripStop[]};
 export type Rejected={order:MatchOrder;reason:RejectReason};
-export type MatchResult={suggestions:Suggestion[];rejected:Rejected[]};
+export type MatchResult={suggestions:Suggestion[];rejected:Rejected[];partial?:boolean};
+export type MatchProgress={shouldStop:()=>boolean;publish:(result:MatchResult)=>Promise<void>};
 export const addonQuerySchema=z.object({
  vehicleId:z.string().uuid(),
  bufferKm:z.coerce.number().int().min(5).max(100).default(25),
@@ -21,7 +22,7 @@ export const addonQuerySchema=z.object({
 export type AddonQuery=z.infer<typeof addonQuerySchema>;
 export type StopTiming={arrivalAt:string;departureAt:string;onboardKg:number;onboardM3:number|null};
 export type TripPlan={orders:MatchOrder[];inputFingerprint:string;stops:TripStop[];timings:StopTiming[];departAt:string;endAt:string;totalKm:number;detourKm:number;totalMinutes:number;totalRevenue:number;loadPctKg:number;loadPctM3:number|null;geometry:Point[][];mainGeometry:Point[][]};
-export type AddonResult=MatchResult&{partial:boolean;updatedAt:string|null;trip?:TripPlan};
+export type AddonResult=MatchResult&{pending?:boolean;partial:boolean;updatedAt:string|null;trip?:TripPlan};
 export type PlannedRoute=Route&{legsMinutes:number[];geometry?:Point[][]};
 export interface RoutePlanner{plan(routes:TripStop[][]):Promise<PlannedRoute[]>}
 
@@ -63,19 +64,18 @@ function precheck(order:MatchOrder,main:MatchOrder,vehicle:VehicleInput):RejectR
  return null;
 }
 
-export async function evaluateAddons(main:MatchOrder,trip:MatchTrip,vehicle:VehicleInput,pool:MatchOrder[],planner:RoutePlanner,partialOpts:Partial<MatchOpts>={}):Promise<MatchResult>{
+export async function evaluateAddons(main:MatchOrder,trip:MatchTrip,vehicle:VehicleInput,pool:MatchOrder[],planner:RoutePlanner,partialOpts:Partial<MatchOpts>={},progress?:MatchProgress):Promise<MatchResult>{
  const opts={...defaultMatchOpts,...partialOpts};const rejected:Rejected[]=[];
  if(trip.addonIds.length>=opts.maxAddons)return{suggestions:[],rejected:pool.map(order=>({order,reason:'TRIP_FULL'}))};
  const candidates:MatchOrder[]=[];
  for(const order of pool){if(trip.addonIds.includes(order.id))continue;const reason=precheck(order,main,vehicle);if(reason)rejected.push({order,reason});else candidates.push(order);}
  const suggestions:Suggestion[]=[];
- const prepared=candidates.map(order=>({order,sequences:insertions(trip.stops,order)}));
- const allSequences=prepared.flatMap(item=>item.sequences);
- const allRoutes=allSequences.length?await planner.plan(allSequences):[];
- if(allRoutes.length!==allSequences.length)throw new Error('Route planner returned incomplete batch');
- let offset=0;
- for(const {order,sequences} of prepared){
-  const routes=allRoutes.slice(offset,offset+sequences.length);offset+=sequences.length;
+ let partial=false;
+ for(const order of candidates){
+  if(progress?.shouldStop()){partial=true;break;}
+  const sequences=insertions(trip.stops,order);
+  const routes=await planner.plan(sequences);
+  if(routes.length!==sequences.length)throw new Error('Route planner returned incomplete batch');
   const initialKm=trip.initialKm??trip.baseKm;
   const detourLimit=Math.min(opts.maxDetourPct*initialKm,opts.maxDetourKm);
   let chosen:{route:PlannedRoute;stops:TripStop[];load:{loadPctKg:number;loadPctM3:number|null};time:{endTime:number;minSlack:number}}|null=null;
@@ -87,13 +87,14 @@ export async function evaluateAddons(main:MatchOrder,trip:MatchTrip,vehicle:Vehi
    const time=timeline(option.stops,option.route,trip.departAt,opts);if('reason'in time){reason=time.reason;continue;}
    chosen={...option,load,time};break;
   }
-  if(!chosen){rejected.push({order,reason});continue;}
+  if(!chosen){rejected.push({order,reason});await progress?.publish({suggestions:[...suggestions].sort((a,b)=>b.score-a.score),rejected:[...rejected],partial:true});continue;}
   const {route,stops:chosenStops,load,time}=chosen;
   const detourKm=Math.max(0,route.km-trip.baseKm);
   const score=order.priceEur!-detourKm*opts.costPerKm;if(score<=0){rejected.push({order,reason:'DETOUR'});continue;}
   suggestions.push({order,addedRevenue:order.priceEur!,detourKm,detourMin:Math.max(0,route.minutes-trip.baseMinutes),loadPctKg:load.loadPctKg,loadPctM3:load.loadPctM3,fit:load.loadPctKg<=85&&load.loadPctM3!==null&&load.loadPctM3<=85&&time.minSlack>=30?'green':'yellow',score,newEndTime:new Date(time.endTime).toISOString(),stops:chosenStops});
+  await progress?.publish({suggestions:[...suggestions].sort((a,b)=>b.score-a.score).slice(0,opts.maxAddons-trip.addonIds.length),rejected:[...rejected],partial:true});
  }
- const available=Math.max(0,opts.maxAddons-trip.addonIds.length);suggestions.sort((a,b)=>b.score-a.score);return{suggestions:suggestions.slice(0,available),rejected};
+ const available=Math.max(0,opts.maxAddons-trip.addonIds.length);suggestions.sort((a,b)=>b.score-a.score);return{suggestions:suggestions.slice(0,available),rejected,partial};
 }
 
 export async function suggestAddons(main:MatchOrder,trip:MatchTrip,vehicle:VehicleInput,pool:MatchOrder[],planner:RoutePlanner,opts:Partial<MatchOpts>={}):Promise<Suggestion[]>{return(await evaluateAddons(main,trip,vehicle,pool,planner,opts)).suggestions;}

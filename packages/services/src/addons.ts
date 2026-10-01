@@ -19,7 +19,12 @@ export class LegRoutePlanner implements RoutePlanner{
  async plan(routes:TripStop[][]):Promise<PlannedRoute[]>{
   const pairs=new Map<string,{from:TripStop['point'];to:TripStop['point']}>();
   for(const route of routes)for(let i=1;i<route.length;i++)if(pointKey(route[i-1].point,route[i].point)!==pointKey(route[i].point,route[i].point))pairs.set(pointKey(route[i-1].point,route[i].point),{from:route[i-1].point,to:route[i].point});
-  const entries=await Promise.all([...pairs].map(async([key,pair])=>[key,await this.routing.route([pair.from,pair.to])] as const));
+  const pending=[...pairs];
+  const entries:Array<readonly [string,Awaited<ReturnType<RoutingProvider['route']>>]>=[];
+  let cursor=0;
+  await Promise.all(Array.from({length:Math.min(8,pending.length)},async()=>{
+   while(cursor<pending.length){const [key,pair]=pending[cursor++];entries.push([key,await this.routing.route([pair.from,pair.to])]);}
+  }));
   const legs=new Map(entries.map(([key,route])=>[key,{...route,geometry:decodePolyline(route.polyline)}]));
   return routes.map(route=>{
    const values=route.slice(1).map((stop,index)=>pointKey(route[index].point,stop.point)===pointKey(stop.point,stop.point)?{polyline:'',km:0,minutes:0,geometry:[] as Point[]}:legs.get(pointKey(route[index].point,stop.point))!);
@@ -31,7 +36,8 @@ export class LegRoutePlanner implements RoutePlanner{
 export class AddonMatchingService{
  private vehicles:VehicleService;
  constructor(private pool:Pool,private planner:RoutePlanner){this.vehicles=new VehicleService(pool);}
- async match(userId:string,mainOrderId:string,rawQuery:unknown,planOnly=false):Promise<AddonResult>{
+ async match(userId:string,mainOrderId:string,rawQuery:unknown,planOnly=false,publish?:(result:AddonResult)=>Promise<void>):Promise<AddonResult>{
+  const deadline=Date.now()+3500;
   const query=addonQuerySchema.parse(rawQuery);const vehicle=await this.vehicles.getOwned(userId,query.vehicleId);
   let addonIds=query.addonOrderIds;
   if(query.tripId){
@@ -56,9 +62,11 @@ export class AddonMatchingService{
   }
   const plan=this.plan(orders,vehicle,trip,currentRoute,initial);
   if(planOnly)return{suggestions:[],rejected:[],trip:plan,partial:false,updatedAt:new Date().toISOString()};
+  const updatedAt=new Date().toISOString();
+  await publish?.({suggestions:[],rejected:[],trip:plan,partial:true,updatedAt});
   const pool=await this.candidates(trip,currentRoute,query.bufferKm,[mainOrderId,...trip.addonIds]);
-  const result=await evaluateAddons(main,trip,vehicle,pool.orders,this.planner,{bufferKm:query.bufferKm});
-  return{...result,trip:plan,partial:pool.total>candidateLimit,updatedAt:new Date().toISOString()};
+  const result=await evaluateAddons(main,trip,vehicle,pool.orders,this.planner,{bufferKm:query.bufferKm},{shouldStop:()=>Date.now()>=deadline,publish:async result=>{await publish?.({...result,trip:plan,partial:true,updatedAt});}});
+  return{...result,trip:plan,partial:Boolean(result.partial)||pool.total>candidateLimit,updatedAt:new Date().toISOString()};
  }
  private plan(orders:MatchOrder[],vehicle:Vehicle,trip:MatchTrip,route:PlannedRoute,mainRoute:PlannedRoute):TripPlan{
   const load=capacity(trip.stops,vehicle,defaultMatchOpts.capacityFactor);

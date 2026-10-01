@@ -27,7 +27,7 @@ const matcher=new AddonMatchingService(pool,new LegRoutePlanner(routing));
 type MatchJob={userId:string;mainOrderId:string;query:AddonQuery;planOnly?:boolean};
 const matchWorker=new Worker<MatchJob,AddonResult>('match-orders',async job=>{
  let result:AddonResult;
- try{result=await matcher.match(job.data.userId,job.data.mainOrderId,job.data.query,job.data.planOnly);}catch(error){if(error instanceof ServiceError)throw new Error(JSON.stringify({code:error.code,message:error.message,status:error.status}));throw error;}
+ try{result=await matcher.match(job.data.userId,job.data.mainOrderId,job.data.query,job.data.planOnly,async progress=>{await job.updateProgress(progress);});}catch(error){if(error instanceof ServiceError)throw new Error(JSON.stringify({code:error.code,message:error.message,status:error.status}));throw error;}
  process.stdout.write(JSON.stringify({event:'match_completed',jobId:job.id,suggestions:result.suggestions.length,partial:result.partial})+'\n');return result;
 },{connection,concurrency:2});
 matchWorker.on('failed',(job,error)=>process.stderr.write(JSON.stringify({event:'match_failed',jobId:job?.id,message:error.message})+'\n'));
