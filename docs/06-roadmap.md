@@ -3,10 +3,10 @@
 Format: `[ ] ID — task` followed by acceptance criteria (AC).
 
 ## M0 — Foundation (week 1)
-- [ ] M0.1 Monorepo + Docker Compose (web, api, worker, postgres+postgis, redis, osrm). AC: `docker compose up` starts all; healthchecks green.
+- [ ] M0.1 Single Railway application + local Docker Compose (app, postgres+postgis), per user simplification 2026-10-01. AC: `docker compose up` starts all; healthchecks green.
 - [x] M0.2 Migrations from `04-data-model.md`. AC: fresh DB migrates; indexes exist.
 - [x] M0.3 `OrderSource` interface + `FixtureSource` (200 EU orders, realistic weights/windows) + `normalize()`. AC: fixtures normalize; tests pass.
-- [x] M0.4 `sync-orders` worker (upsert, mark closed after 2 missed syncs, audit log). AC: re-running is idempotent; closed orders flip status.
+- [x] M0.4 in-process periodic order sync (upsert, mark closed after 2 missed syncs, audit log). AC: re-running is idempotent; closed orders flip status.
 - [x] M0.5 `RoutingProvider` (OSRM + cache + Google fallback). AC: same stops => cache hit; fallback used when OSRM down (tested with mock).
 
 ## M1 — Account & search (week 2)
@@ -16,14 +16,14 @@ Format: `[ ] ID — task` followed by acceptance criteria (AC).
 
 ## M2 — Matching + Builder (weeks 3–4)
 - [x] M2.1 `packages/core/matching`: steps 1–7 of `02-matching-engine.md` with all tests in §7. AC: tests green; pure (no I/O).
-- [ ] M2.2 `GET /orders/:id/addons` via match-worker, 5 min cache, `partial` flag. AC: p95 < 4 s on 10k open orders. Incremental worker progress, candidate deadline and bounded cached routing implemented 2026-10-01; performance acceptance deferred by user.
+- [ ] M2.2 `GET /orders/:id/addons` via direct in-process matching, 5 min cache, `partial` flag. AC: p95 < 4 s on 10k open orders. Incremental calculation progress, candidate deadline and bounded cached routing implemented 2026-10-01; performance acceptance deferred by user.
 - [ ] M2.3 Trip Builder UI (map, sticky summary, Along-the-way, add/remove, show-all toggle). AC: adding recomputes list; cap 4; load bars correct. Implementation added 2026-10-01; acceptance tests deferred by user.
 - [x] M2.4 `POST /trips` with server re-validation. AC: stale/over-capacity trip rejected with stable error code.
 
 ## M3 — Trips management (week 5)
 - [x] M3.1 Trip Detail + Open on trans.eu + Mark booked + derived trip status. AC: status rules in `04` §Derived hold.
 - [x] M3.2 Trips list with tabs + swipe cancel.
-- [x] M3.3 `notify` worker: email when an order in a saved trip becomes `lost`. AC: one email per order, banner appears in app.
+- [x] M3.3 database-backed notification delivery: email when an order in a saved trip becomes `lost`. AC: one email per order, banner appears in app.
 - [ ] M3.4 Stripe trial/checkout/portal/webhook + paywall behavior. AC: trial expiry blocks Save/Add only.
 - [ ] M3.5 Event logging for all types in `04`.
 

@@ -62,3 +62,16 @@
 - `pending` distinguishes a still-running matching job from a completed but partial corridor search. Builder polls pending jobs every 1.5 seconds, at most ten responses per selection, and keeps ready suggestions usable during background calculation.
 - Stop polling completed partial results; show the incomplete-search notice instead. Abort requests and cancel scheduled polls when selection changes or the component unmounts. Clear the previous route immediately on a new selection so stale totals/map are not presented as the current draft.
 - Typecheck passed; tests and browser acceptance remain deferred by user.
+
+## Google sign-in pilot — user-requested scope change
+- User requested Google login instead of email setup. Production login screen uses Google; email provider is disabled for the pilot, with no lost-order email delivery. Existing email and local development routes remain.
+- OAuth authorization code + PKCE, signed ten-minute state/nonce cookie, Google SDK ID-token verification, unique Google subject, and conservative existing-account linking. Migration 0004 adds users.google_sub. OAuth secrets remain server-only.
+- Google OAuth credentials are still needed to activate login; a Routes API key cannot replace them. Tests remain deferred by user.
+
+## 2026-10-01 — Single Railway application (explicit user request)
+
+Supersedes split API/Web/worker deployment and the Redis requirement. Keep existing tested Nest endpoints
+and Next pages in one Node process on one port. Direct matching uses a bounded disposable memory cache;
+Postgres remains the durable store. A non-overlapping timer replaces BullMQ periodic imports.
+Keep existing PostGIS and Google OAuth data. Use Google Routes directly without a routing container.
+No destructive database migration. One Railway replica; scale-out scheduling is outside this pilot.

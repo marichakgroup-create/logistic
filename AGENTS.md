@@ -32,13 +32,15 @@ orders along the route**, auto-filtered by vehicle capacity, time windows and de
 
 ## Stack (fixed for MVP)
 Next.js 14+ (App Router, TS) · Tailwind + shadcn/ui · MapLibre GL · NestJS (TS) · PostgreSQL 16 + PostGIS ·
-Redis + BullMQ · OSRM (self-hosted, Google Routes as fallback) · Stripe · Docker Compose.
+Single Node process · Google Routes (optional existing OSRM) · Stripe · Docker Compose for local development.
+
+User-authorized simplification (2026-10-01): one Railway app, no Redis/BullMQ or separate workers.
+Next.js and NestJS share one listener; imports run on an in-process timer. PostgreSQL is retained.
 
 ## Repo layout
 ```
 /apps/web        Next.js frontend
-/apps/api        NestJS backend (REST)
-/apps/worker     BullMQ workers (sync-orders, match, notify)
+/apps/api        Single application entry point, NestJS REST + Next.js server
 /packages/core   Shared: matching engine, types, zod schemas (pure, no I/O)
 /infra           docker-compose, OSRM data, migrations
 /docs            This documentation

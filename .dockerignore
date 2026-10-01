@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+**/.next
+.git
+.env
+.env.*
+!.env.example
+.neon
+.local
+.agents
+*.tsbuildinfo
+infra/osrm/*.pbf
+infra/osrm/*.osrm*

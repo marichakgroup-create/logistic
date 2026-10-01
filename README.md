@@ -1,35 +1,43 @@
 # LoadLink
 
-Mobile-first van freight planning app. The foundation, account/search, matching, trip saving and core trip management flows are implemented; progress and remaining acceptance work are tracked in `docs/STATUS.md` and `docs/06-roadmap.md`.
+Van freight planning: find a main load, add up to four compatible loads, save a trip and track manual booking status.
 
-## Local checks
+## Architecture
 
-Node.js 22+ and npm 10+:
+One Node application serves Next.js pages and `/v1` API routes on one port. PostgreSQL/PostGIS stores accounts,
+orders, trips and cached road routes. Matching and periodic imports run inside the application.
+No Redis, message queue, separate worker, API service or routing container is required.
+
+## Local development
+
+Node 22 and npm 10:
 
 ```sh
 npm ci
+cp .env.example .env.local
+# Supply an existing PostgreSQL/PostGIS DATABASE_URL in .env.local.
+node --env-file=.env.local --import tsx infra/migrate.ts
+npm run dev
+```
+
+Alternatively, `docker compose up --build` starts the app and a local PostGIS database.
+Open http://localhost:3000. Development sign-in accepts a valid email; production uses Google OAuth.
+Local fixture routing is approximate. Production uses Google Routes or an optional existing OSRM endpoint.
+
+## Checks
+
+```sh
 npm run typecheck
 npm run lint
 npm test
-npm run dev --workspace=@loadlink/web
+npm run build
 ```
 
-For the complete local flow, run the API and web app with `DATABASE_URL`, `APP_URL`, and a 32+ character `SESSION_SECRET`. Development magic links are written to `.local/mail` and never returned by the API. Production requires `EMAIL_PROVIDER=resend`, `EMAIL_API_KEY`, and a verified `EMAIL_FROM` sender.
+## Railway
 
-To sign in locally, submit any valid email on `/login` and press **Sign in**. The development-only endpoint creates the local session immediately and is disabled in production. `npm run mail:latest` remains available when testing the magic-link flow itself.
+Connect this repo's `main` branch to one Railway service. `railpack.json` supplies build and start settings; set the service healthcheck to `/v1/health`.
+`npm start` migrates the existing database and starts the application. Push to main to deploy.
+See [deployment settings](docs/RAILWAY.md) for required variables and Google OAuth callback.
 
-## Containers
-
-Install Docker Compose. Place a regional OSM extract at `infra/osrm/region.osm.pbf` (see that directory's README), then:
-
-```sh
-docker compose up --build -d
-docker compose ps
-curl http://localhost:3001/v1/health
-```
-
-Migration runs before API/worker. Fixture worker imports 200 deterministic orders. Configure `FIXTURE_EPOCH` in the worker environment for a future fixture date when needed. This is a development stack; production secrets, TLS and monitoring are later deployment work.
-
-Routing clients and cache live in `packages/services`. Orders come from the fixture adapter until the intermediary HTTP feed contract is supplied. LoadLink does not call trans.eu directly and has no booking integration.
-
-See docs/DECISIONS.md for assumptions and docs/STATUS.md for verified checks.
+The pilot currently imports fixture orders. Real feed integration and Stripe billing remain roadmap work.
+LoadLink never books orders; carriers confirm them on trans.eu.

@@ -8,9 +8,10 @@ import { z, ZodError } from 'zod';
 import { addonQuerySchema, magicLinkRequestSchema, tripCreateSchema, tripListQuerySchema, tripOrderStatusSchema, type SessionUser } from '@loadlink/core';
 import { AuthService, VehicleService, OrderService, ServiceError, enforceRequestLimit,
   SESSION_SECONDS, TripService, type EmailSender } from '@loadlink/services';
-import type {AddonDispatcher} from './addon-queue';
+import {GoogleAuth} from './google-auth';
+import type {AddonDispatcher} from './addon-dispatcher';
 
-export type AppConfig = { appUrl: string; sessionSecret: string; production: boolean };
+export type AppConfig = { appUrl: string; sessionSecret: string; production: boolean; googleClientId?:string; googleClientSecret?:string };
 function cookieToken(request: Request): string | undefined {
   return request.headers.cookie?.split(';').map(c => c.trim()).find(c => c.startsWith('loadlink_session='))?.slice('loadlink_session='.length);
 }
@@ -33,6 +34,7 @@ class ErrorFilter implements ExceptionFilter {
 
 export async function createApp(pool: Pool, sender: EmailSender, config: AppConfig, addons?: AddonDispatcher) {
   const auth = new AuthService(pool, sender, config.sessionSecret, config.appUrl);
+  const google=config.googleClientId&&config.googleClientSecret?new GoogleAuth(config.googleClientId,config.googleClientSecret,config.appUrl,config.sessionSecret):null;
   const vehicles = new VehicleService(pool);
   const orders = new OrderService(pool);
   const trips = new TripService(pool);
@@ -49,6 +51,26 @@ export async function createApp(pool: Pool, sender: EmailSender, config: AppConf
   @Controller('v1')
   class ApiController {
     @Get('health') async health() { await pool.query('SELECT 1'); return { status: 'ok' }; }
+    @Get('auth/google') async googleStart(@Req() request:Request,@Res() response:Response){
+      if(!google)return response.redirect(303,config.appUrl+'/login?error=google-unavailable');
+      await enforceRequestLimit(pool,'google:'+request.ip,10);
+      const flow=google.start();
+      response.cookie('loadlink_google',flow.cookie,{...cookieOptions,maxAge:600000,path:'/v1/auth/google'});
+      response.redirect(303,flow.url);
+    }
+    @Get('auth/google/callback') async googleCallback(@Query('code') code:string,@Query('state') state:string,@Req() request:Request,@Res() response:Response){
+      const cookie=request.headers.cookie?.split(';').map(value=>value.trim()).find(value=>value.startsWith('loadlink_google='))?.slice('loadlink_google='.length);
+      response.clearCookie('loadlink_google',{httpOnly:true,sameSite:'lax',secure:config.production,path:'/v1/auth/google'});
+      try{
+        if(!google)throw new ServiceError('GOOGLE_AUTH_FAILED','Google sign-in is unavailable.',503);
+        const profile=await google.finish(code,state,cookie);
+        const result=await auth.createGoogleSession(profile.email,profile.subject,profile.authoritative);
+        response.cookie('loadlink_session',result.sessionToken,cookieOptions);
+        response.redirect(303,config.appUrl+(result.hasVehicle?'/find':'/onboarding'));
+      }catch{
+        response.redirect(303,config.appUrl+'/login?error=google-failed');
+      }
+    }
     @Post('auth/magic-link') async link(@Body() body: unknown, @Req() request: Request) {
       sameOrigin(request);
       await auth.requestLink(magicLinkRequestSchema.parse(body).email);

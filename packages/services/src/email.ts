@@ -33,3 +33,8 @@ export class ResendEmailSender implements EmailSender,OrderNotificationSender {
   async sendOrderLost(email:string,data:LostOrderEmail){await this.send(email,'A load in your trip is no longer available',`The load ${data.pickupAddress} → ${data.deliveryAddress} is no longer available. Review your trip: ${data.tripUrl}`);}
   private async send(email:string,subject:string,text:string){const response=await fetch('https://api.resend.com/emails',{method:'POST',signal:AbortSignal.timeout(10000),headers:{Authorization:`Bearer ${this.apiKey}`,'Content-Type':'application/json'},body:JSON.stringify({from:this.from,to:[email],subject,text})});if(!response.ok)throw new ServiceError('EMAIL_UNAVAILABLE','Email delivery is unavailable. Please retry.',503);}
 }
+
+export class DisabledEmailSender implements EmailSender,OrderNotificationSender {
+ async sendMagicLink():Promise<void>{throw new ServiceError('EMAIL_DISABLED','Use Google to sign in.',503);}
+ async sendOrderLost():Promise<void>{throw new ServiceError('EMAIL_DISABLED','Email notifications are disabled.',503);}
+}

@@ -8,3 +8,7 @@ infra/osrm/*.pbf
 .local/
 .DS_Store
 files.zip
+.neon
+.env.local
+
+.env.*.local

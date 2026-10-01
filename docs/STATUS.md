@@ -1,3 +1,12 @@
+# Current deployment — 2026-10-01
+
+Single Node application, one Railway service and PostgreSQL/PostGIS. Redis/BullMQ and separate workers removed.
+Validated: TypeScript, ESLint, 55 unit tests, production build; 390 px browser search, direct route calculation
+and trip save against the local PostgreSQL instance. Production login requires configured Google OAuth;
+road routing requires Google Routes or an existing OSRM provider. Real order feed and billing remain unfinished.
+
+## Earlier milestone notes (historical)
+
 # Development status — 2026-09-30
 
 Implemented: npm monorepo; Next.js/NestJS/BullMQ entry points; Compose configuration; Drizzle SQL migration with PostGIS/citext and indexes; 200 deterministic fixtures and normalization; transactional sync with cursor, advisory lock, two-confirmation closure, expiry and audit batches; OSRM/Google providers and persistent route cache.

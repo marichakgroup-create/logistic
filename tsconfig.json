@@ -15,6 +15,7 @@
     "apps/**/*.ts",
     "apps/**/*.tsx",
     "packages/**/*.ts",
-    "infra/**/*.ts"
+    "infra/**/*.ts",
+    "neon.ts"
   ]
 }

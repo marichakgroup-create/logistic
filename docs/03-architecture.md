@@ -1,21 +1,18 @@
 # 03 — Architecture
 
-```
-trans.eu data feed ─▶ OrderSource adapter ─▶ [sync-orders worker] ─▶ Postgres/PostGIS ◀─▶ API (NestJS) ◀─▶ Web (Next.js PWA)
-                                                                        ▲                      │
-                                          OSRM (+Google fallback) ◀─ route_cache ◀─ [match-worker] ◀─ Redis/BullMQ
-                                                                                   [notify worker] ─▶ email (Resend/SES)
-Stripe ◀─▶ API webhooks
+User-authorized simplification, 2026-10-01. One repository, one Railway service and one Node process.
+
+```text
+Browser → single HTTP listener → Next.js pages / NestJS /v1 API → PostgreSQL + PostGIS
+                                      API → direct matching → cached Google Routes / optional OSRM
+                                      timer → order adapter → sync + pending notifications
 ```
 
-## Services
-- **web:** Next.js App Router, server components for lists, client components for Trip Builder + map. PWA manifest.
-- **api:** NestJS REST, zod-validated DTOs (shared from `/packages/core`). Session cookie (httpOnly, SameSite=Lax).
-- **worker:** `sync-orders` (every 60–300 s), `match` (on demand), `notify` (event-driven), `expire-orders` (hourly).
-- **routing:** OSRM container (Europe extract, car profile; van parameters not needed in MVP). Fallback: Google Routes API behind `RoutingProvider` interface.
-- **db:** Postgres 16 + PostGIS; migrations via Prisma/Drizzle (pick one, record in DECISIONS.md).
-- **auth:** passwordless magic link (token TTL 15 min, single use) → session 30 days.
-- **billing:** Stripe Checkout + Customer Portal; webhook updates `users.plan`, `plan_status`, `trial_ends_at`.
+`apps/api/src/main.ts` hosts both frameworks. `npm start` runs migrations before listening.
+Matching uses a bounded five-minute memory cache and two concurrent calculations; fresh saves bypass it.
+Road routes, sync state and notification records remain durable in PostgreSQL. Import runs immediately and
+then one minute after each completion. Shutdown drains running work. Use one Railway replica.
+See `RAILWAY.md` for deployment variables. Redis, BullMQ and separate API/worker services are removed.
 
 ## Adapter interface (isolates trans.eu)
 ```ts
@@ -46,18 +43,16 @@ Implementations: `TransEuFeedSource` (reads our existing system DB/API), `Fixtur
 Errors: `{error: {code, message}}`; codes stable (`ORDER_GONE`, `CAPACITY_EXCEEDED`, `TRIAL_EXPIRED`, …).
 **Server always re-validates** a trip on save (orders still open, capacity, time) — never trust client.
 
-## Env vars
-`DATABASE_URL, REDIS_URL, SESSION_SECRET, OSRM_URL, GOOGLE_ROUTES_KEY, ORDER_SOURCE (feed|fixture),
-TRANSEU_FEED_URL, TRANSEU_FEED_TOKEN, STRIPE_SECRET, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID, EMAIL_API_KEY, APP_URL`
+## Environment and operations
 
-## Ops
-Docker Compose for dev/prod-lite (web, api, worker, postgres, redis, osrm). Healthchecks, structured JSON logs,
-Sentry. Audit log for every sync batch (counts in/updated/closed). Rate limit: 60 req/min/user, 5 magic links/hour/email.
-Data access: users can only read their own vehicles/trips; orders are shared read-only.
+`DATABASE_URL`, `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_ROUTES_KEY`.
+Optional: `APP_URL` (defaults to Railway domain), `OSRM_URL`, email configuration. `ORDER_SOURCE=fixture`
+until feed integration is implemented. `PORT` is supplied by Railway. No `API_URL` or `REDIS_URL`.
+Rate limits and user ownership checks remain in PostgreSQL. Only the app is publicly exposed.
 
 ### M2 draft route contract
 `addonOrderIds` is a comma-separated, ordered selection of up to four unique IDs in GET queries. `trip` is the server-calculated snapshot of selected orders, stop order, timeline, peak load, total km, detour, revenue and road geometry. No `trip` in a partial timeout response means the draft is still unavailable for saving.
 
-`POST /trips` requests a fresh plan-only worker job and compares its input fingerprint against locked current order/vehicle rows. Route snapshots are stored in `trips.route_plan`. Map raster tiles are configurable with `NEXT_PUBLIC_MAP_TILE_URL`; the browser never calls a routing provider.
+`POST /trips` requests a fresh plan-only in-process calculation and compares its input fingerprint against locked current order/vehicle rows. Route snapshots are stored in `trips.route_plan`. Map raster tiles are configurable with `NEXT_PUBLIC_MAP_TILE_URL`; the browser never calls a routing provider.
 
-Matching responses can include `pending: true` when the API wait elapsed and the worker is still running. A completed response can remain `partial: true` because of the candidate/time limit; it is not automatically retried. Builder polls only pending responses with a bounded retry count and aborts obsolete selections.
+Matching responses can include `pending: true` when the API wait elapsed and the calculation is still running. A completed response can remain `partial: true` because of the candidate/time limit; it is not automatically retried. Builder polls only pending responses with a bounded retry count and aborts obsolete selections.

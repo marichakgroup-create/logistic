@@ -69,6 +69,24 @@ export class AuthService {
     }catch(error){await db.query('ROLLBACK');throw error;}finally{db.release();}
   }
 
+  async createGoogleSession(email:string,subject:string,authoritative:boolean){
+    const db=await this.pool.connect();
+    try{
+      await db.query('BEGIN');
+      await db.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`google:${email.toLowerCase()}`]);
+      const existing=await db.query<{id:string;google_sub:string|null}>('SELECT id,google_sub FROM users WHERE google_sub=$1 OR email=$2 ORDER BY (google_sub=$1) DESC NULLS LAST FOR UPDATE',[subject,email]);
+      const row=existing.rows[0];
+      if(row&&row.google_sub!==subject&&(row.google_sub||!authoritative))throw new ServiceError('GOOGLE_ACCOUNT_CONFLICT','Sign in using your existing account method.',409);
+      const result=row
+       ?await db.query<UserRow>('UPDATE users SET google_sub=$1 WHERE id=$2 RETURNING id,email,plan,plan_status,trial_ends_at',[subject,row.id])
+       :await db.query<UserRow>("INSERT INTO users(email,google_sub,trial_ends_at) VALUES($1,$2,now()+interval '14 days') RETURNING id,email,plan,plan_status,trial_ends_at",[email,subject]);
+      const user=userFromRow(result.rows[0]),sessionToken=randomBytes(32).toString('hex');
+      await db.query("INSERT INTO sessions(token_hash,user_id,expires_at) VALUES($1,$2,now()+interval '30 days')",[this.hash(sessionToken),user.id]);
+      const vehicles=await db.query('SELECT id FROM vehicles WHERE user_id=$1 AND is_default',[user.id]);
+      await db.query('COMMIT');return{sessionToken,user,hasVehicle:vehicles.rowCount!==0};
+    }catch(error){await db.query('ROLLBACK');throw error;}finally{db.release();}
+  }
+
   async authenticate(token: string | undefined): Promise<SessionUser> {
     if (!token || !/^[a-f0-9]{64}$/.test(token)) throw this.unauthorized();
     const result = await this.pool.query<UserRow>(

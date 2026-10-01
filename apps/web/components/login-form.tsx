@@ -5,7 +5,7 @@ import { api } from '../lib/api';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
-export function LoginForm({ invalid=false,localOutbox=false }: { invalid?:boolean;localOutbox?:boolean }) {
+export function LoginForm({ invalid=false,localOutbox=false,googleOnly=false,googleError=false }: { invalid?:boolean;localOutbox?:boolean;googleOnly?:boolean;googleError?:boolean }) {
   const [email,setEmail]=useState(''); const [sent,setSent]=useState(false);
   const [busy,setBusy]=useState(false); const [error,setError]=useState('');
   async function submit(event:FormEvent) {
@@ -22,10 +22,12 @@ export function LoginForm({ invalid=false,localOutbox=false }: { invalid?:boolea
     <p className="eyebrow">LOADLINK FOR CARRIERS</p><h1>Fill the miles you already drive.</h1>
     <p className="lead">Choose your main load. We’ll find profitable freight that fits along the route.</p>
     {invalid&&<p className="error-message" role="alert">This link has expired or already been used. Request a new one.</p>}
-    <label htmlFor="email">Email address<Input id="email" name="email" type="email" inputMode="email" autoComplete="email" placeholder="you@company.com" value={email} onChange={e=>setEmail(e.target.value)} required maxLength={254}/></label>
+    {googleOnly&&<Button className="full-width" type="button" onClick={()=>window.location.assign('/v1/auth/google')}>Continue with Google</Button>}
+    {googleError&&<p className="error-message" role="alert">Google sign-in is unavailable or failed. Please try again later.</p>}
+    {!googleOnly&&<label htmlFor="email">Email address<Input id="email" name="email" type="email" inputMode="email" autoComplete="email" placeholder="you@company.com" value={email} onChange={e=>setEmail(e.target.value)} required maxLength={254}/></label>}
     {error&&<p className="error-message" role="alert">{error}</p>}
-    <Button className="full-width" type="submit" disabled={busy}>{busy?'Signing in…':localOutbox?'Sign in':'Continue with email'}<ArrowRight size={18}/></Button>
-    <p className="secure-note"><ShieldCheck size={15}/> {localOutbox?'Local test mode · no password required.':'No password. We send a one-time secure link.'}</p>
+    {!googleOnly&&<Button className="full-width" type="submit" disabled={busy}>{busy?'Signing in…':localOutbox?'Sign in':'Continue with email'}<ArrowRight size={18}/></Button>}
+    <p className="secure-note"><ShieldCheck size={15}/> {googleOnly?'Secure sign-in with your Google account.':localOutbox?'Local test mode · no password required.':'No password. We send a one-time secure link.'}</p>
     <div className="trial-note"><span><i className="status-dot"/>14-day free trial</span><span>One van · Cancel anytime</span></div>
   </form>;
 }

@@ -48,7 +48,7 @@ Badge: `+€120 · +8 km · fits 78%`. "Show all" toggle lists rejected orders g
 
 ## 6. Performance
 Geo prefilter in SQL with GiST indexes; routing calls batched and cached; max 100 candidates into step 3;
-run in `match-worker` with 4 s timeout, return partial ranked list flagged `partial=true` if exceeded.
+run inside the application with 4 s timeout, return partial ranked list flagged `partial=true` if exceeded.
 
 ## 7. Required unit tests
 - Direction: add-on behind the main route is rejected.

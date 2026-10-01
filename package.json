@@ -6,25 +6,36 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build:web",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
     "migrate": "tsx infra/migrate.ts",
-    "mail:latest": "tsx infra/latest-mail.ts"
+    "mail:latest": "tsx infra/latest-mail.ts",
+    "start": "npm run migrate && NODE_ENV=production tsx apps/api/src/main.ts",
+    "build:web": "npm run build --workspace=@loadlink/web",
+    "dev": "tsx --env-file-if-exists=.env.local apps/api/src/main.ts"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "tsx": "^4.19.0",
-    "vitest": "^4.1.11",
-    "eslint": "^9.0.0",
-    "typescript-eslint": "^8.0.0",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.11.0",
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^4.1.11"
   },
   "overrides": {
     "postcss": "^8.5.23"
-  }
+  },
+  "dependencies": {
+    "@neon/config": "^1.8.3",
+    "@neon/env": "^1.4.8",
+    "tsx": "^4.19.0"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "packageManager": "npm@10.9.2"
 }
