@@ -154,3 +154,56 @@
  .insight-tabs button small{font-size:10px}
  .insight-content{padding:0 14px}
 }
+
+/* Builder workspace: route context stays beside the ranked add-ons on desktop. */
+.app-frame .builder-sheet{padding-top:20px}
+.app-frame .app-main:has(.builder-workspace){max-width:1600px}
+.builder-workspace{display:grid;grid-template-columns:minmax(290px,320px) minmax(0,1fr);grid-template-areas:"options map";align-items:start;gap:20px}
+.builder-options-panel{grid-area:options;min-width:0}
+.builder-map-panel{grid-area:map;min-width:0;padding:16px;border:1px solid var(--line);border-radius:18px;background:#fafbfa}
+.app-frame .builder-map-panel .route-metrics{margin:0 0 14px;padding:4px 0 14px;gap:12px}
+.app-frame .builder-map-panel .route-metrics strong{font-size:15px}
+.app-frame .builder-map-panel .load-gauges{max-width:none;margin:0 0 16px;gap:12px}
+.app-frame .builder-map-panel .route-map{margin:0}
+.app-frame .builder-map-panel .route-map-canvas,.app-frame .builder-map-panel .route-map-placeholder{height:390px;min-height:300px}
+.app-frame .builder-map-panel .route-map-placeholder{display:grid;place-items:center;margin:0;border:1px solid var(--line);border-radius:14px;color:var(--ink-2);font-size:13px}
+.app-frame .builder-map-panel .builder-insights{margin:12px 0 0;padding:18px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.map-detail-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:14px}
+.map-detail-head .section-label{margin:0 0 4px;color:var(--ink-2)}
+.app-frame .map-detail-head h2{margin:0;font-size:18px}
+.map-detail-head>span{color:var(--ink-2);font-size:12px;white-space:nowrap}
+.app-frame .builder-map-panel .insight-content{border:0;border-top:1px solid var(--line);border-radius:0;margin-top:12px;padding:0}
+.app-frame .builder-map-panel .insight-tabs button{min-height:64px;padding:12px}
+.app-frame .builder-options-panel .builder-heading{align-items:start;gap:8px;margin:0 0 16px}
+.app-frame .builder-options-panel .builder-heading h1{font-size:20px}
+.app-frame .builder-options-panel .builder-heading>span{display:none}
+.app-frame .builder-options-panel .selected-loads{margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.app-frame .builder-options-panel .selected-load{display:grid;gap:10px}
+.app-frame .builder-options-panel .selected-load button{justify-self:start}
+.app-frame .builder-options-panel .addon-row{grid-template-columns:12px minmax(0,1fr);gap:10px;padding:16px}
+.app-frame .builder-options-panel .addon-row>button{grid-column:2;width:100%;min-height:44px;margin-top:6px}
+.app-frame .builder-options-panel .addon-copy h2{overflow-wrap:anywhere}
+.app-frame .builder-options-panel .addon-facts span{white-space:normal}
+.app-frame .builder-footer{position:static;margin-top:20px}
+@media(max-width:900px){
+ .builder-workspace{display:flex;flex-direction:column;gap:24px}
+ .builder-map-panel,.builder-options-panel{width:100%}
+ .app-frame .builder-map-panel .route-map-canvas,.app-frame .builder-map-panel .route-map-placeholder{height:300px;min-height:280px}
+ .app-frame .builder-options-panel .addon-row{grid-template-columns:12px minmax(0,1fr)}
+}
+@media(max-width:760px){
+ .app-frame .builder-sheet{padding-top:16px}
+ .app-frame .builder-map-panel{padding:12px;border-radius:16px}
+ .app-frame .builder-map-panel .route-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .app-frame .builder-map-panel .route-metrics>div:last-child{grid-column:1/-1}
+ .app-frame .builder-map-panel .route-map-canvas,.app-frame .builder-map-panel .route-map-placeholder{height:260px;min-height:240px}
+ .app-frame .builder-map-panel .builder-insights{padding:14px}
+ .app-frame .builder-map-panel .insight-tabs{gap:8px}
+ .app-frame .builder-map-panel .insight-tabs button{min-height:74px}
+ .app-frame .builder-options-panel .addon-row>button{width:100%;min-height:48px;font-size:14px}
+ .app-frame .builder-footer{position:sticky;bottom:calc(80px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr;gap:10px;padding:12px 14px;margin-top:24px}
+ .app-frame .builder-footer>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+ .app-frame .builder-footer .button{width:100%;min-height:52px}
+ .app-frame .order-card,.app-frame .order-card.featured{padding-bottom:20px!important}
+ .app-frame .order-action,.app-frame .featured .order-action{position:static;display:flex;justify-content:center;align-items:center;gap:8px;width:100%;min-height:48px;margin-top:16px;border-radius:10px;background:var(--signal);font-size:14px;font-weight:700}
+}
